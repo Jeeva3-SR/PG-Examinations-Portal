@@ -9,6 +9,15 @@ const AssignedQPSetter = require('../models/AssignedQPSetter');
 const CompletedDuty = require('../models/CompletedDuty');
 const QPOrder = require('../models/QPOrder');
 
+/**
+ * @openapi
+ * /api/claims:
+ *   get:
+ *     summary: Get all claims
+ *     responses:
+ *       200:
+ *         description: Array of claims
+ */
 // Get all claims
 router.get('/', async (req, res) => {
   try {
@@ -20,6 +29,34 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims:
+ *   post:
+ *     summary: Create a new claim
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               claimId:
+ *                 type: string
+ *               facultyId:
+ *                 type: string
+ *               facultyName:
+ *                 type: string
+ *               dutyType:
+ *                 type: string
+ *               amount:
+ *                 type: number
+ *               status:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created claim
+ */
 // Add a new claim
 router.post('/', async (req, res) => {
   try {
@@ -44,6 +81,26 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/{id}:
+ *   patch:
+ *     summary: Update a claim
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Updated claim
+ */
 // Update a claim
 router.patch('/:id', async (req, res) => {
   try {
@@ -63,6 +120,21 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/{id}:
+ *   delete:
+ *     summary: Delete a claim
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
 // Delete a claim
 router.delete('/:id', async (req, res) => {
   try {
@@ -78,6 +150,25 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/generate:
+ *   post:
+ *     summary: Generate claims from completed duties in a date range
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               startDate:
+ *                 type: string
+ *               endDate:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Claims generated
+ */
 // Generate claims from duties
 router.post('/generate', async (req, res) => {
   try {
@@ -133,6 +224,21 @@ router.post('/generate', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/faculty/{employeeId}:
+ *   get:
+ *     summary: Get claims by faculty employeeId
+ *     parameters:
+ *       - name: employeeId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of claims
+ */
 // Get claims by faculty
 router.get('/faculty/:employeeId', async (req, res) => {
   try {
@@ -144,6 +250,15 @@ router.get('/faculty/:employeeId', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/advance-details:
+ *   get:
+ *     summary: Get latest advance claim details
+ *     responses:
+ *       200:
+ *         description: Advance details
+ */
 router.get('/advance-details', async (req, res) => {
     try {
         // Fetch the latest advance claim amount
@@ -185,6 +300,25 @@ router.get('/advance-details', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/claims/forward-advance-letter:
+ *   post:
+ *     summary: Forward advance claim letter data
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               totalAmount:
+ *                 type: number
+ *               formattedMonthYear:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Letter forwarded
+ */
 // POST: Forward advance claim letter data
 router.post('/forward-advance-letter', async (req, res) => {
     try {
@@ -201,6 +335,15 @@ router.post('/forward-advance-letter', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/claims/forwarded-advance-letter:
+ *   get:
+ *     summary: Get latest forwarded advance claim letter
+ *     responses:
+ *       200:
+ *         description: Forwarded letter
+ */
 // GET: Latest forwarded advance claim letter
 router.get('/forwarded-advance-letter', async (req, res) => {
     try {
@@ -215,6 +358,15 @@ router.get('/forwarded-advance-letter', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/claims/all:
+ *   get:
+ *     summary: Aggregated claim items across sources
+ *     responses:
+ *       200:
+ *         description: Aggregated claims
+ */
 // GET /api/claims/all
 router.get('/all', async (req, res) => {
   try {
@@ -260,6 +412,26 @@ router.get('/all', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/{claimId}:
+ *   patch:
+ *     summary: Update or upsert a claim by claimId
+ *     parameters:
+ *       - name: claimId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Updated claim
+ */
 // PATCH /api/claims/:claimId
 router.patch('/:claimId', async (req, res) => {
   try {
@@ -290,6 +462,15 @@ router.patch('/:claimId', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/claims/advance:
+ *   get:
+ *     summary: Get total from the latest advance claim
+ *     responses:
+ *       200:
+ *         description: Latest advance amount
+ */
 // GET: The total from the latest advance claim
 router.get('/advance', async (req, res) => {
   try {

@@ -4,6 +4,19 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config();
+const swaggerUi = require('swagger-ui-express');
+let swaggerDocument = undefined;
+let swaggerJSDoc = undefined;
+try {
+  swaggerJSDoc = require('swagger-jsdoc');
+} catch (err) {
+  // swagger-jsdoc not installed yet; will fallback to static swagger.json if present
+}
+try {
+  swaggerDocument = require('./swagger.json');
+} catch (err) {
+  swaggerDocument = undefined;
+}
 
 // Create Express app
 const app = express();
@@ -34,6 +47,27 @@ app.use('/api/letters', require('./routes/letterRoutes'));
 app.use('/api/coordinator', require('./routes/coordinatorRoutes'));
 app.use('/api/users', require('./routes/usersRoutes'));
 app.use('/api', require('./routes/authRoutes'));
+
+// Swagger UI - API documentation
+if (swaggerJSDoc) {
+  const options = {
+    definition: {
+      openapi: '3.0.0',
+      info: {
+        title: 'PG Examinations Portal API',
+        version: '1.0.0',
+        description: 'Auto-generated API documentation from JSDoc comments',
+      },
+    },
+    apis: [path.join(__dirname, 'routes', '*.js')],
+  };
+  const swaggerSpec = swaggerJSDoc(options);
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+} else if (swaggerDocument) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+} else {
+  console.warn('Swagger UI disabled: install swagger-jsdoc or provide swagger.json');
+}
 
 // Test route
 app.get('/api/test', (req, res) => {

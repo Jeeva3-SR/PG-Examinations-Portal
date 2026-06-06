@@ -6,6 +6,15 @@ const Faculty = require('../models/Faculty');
 const Session = require('../models/Session');
 const StudentInput = require('../models/StudentInput');
 
+/**
+ * @openapi
+ * /api/qporders:
+ *   get:
+ *     summary: Get all QP orders
+ *     responses:
+ *       200:
+ *         description: Array of QP orders
+ */
 // Get all QP orders
 router.get('/', async (req, res) => {
   try {
@@ -18,6 +27,24 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders:
+ *   post:
+ *     summary: Create a QP order for a course
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               courseCode:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Created QP order
+ */
 // Add a new QP order
 router.post('/', async (req, res) => {
   try {
@@ -42,6 +69,29 @@ router.post('/', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/{id}/status:
+ *   patch:
+ *     summary: Update QP order status
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Updated
+ */
 // Update QP order status
 router.patch('/:id/status', async (req, res) => {
   try {
@@ -60,6 +110,21 @@ router.patch('/:id/status', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/{id}:
+ *   delete:
+ *     summary: Delete a QP order
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
 // Delete a QP order
 router.delete('/:id', async (req, res) => {
   try {
@@ -75,6 +140,15 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/generate-all:
+ *   post:
+ *     summary: Generate QP orders for all courses
+ *     responses:
+ *       201:
+ *         description: Orders generated
+ */
 // Generate QP orders for all courses
 router.post('/generate-all', async (req, res) => {
   try {
@@ -98,6 +172,27 @@ router.post('/generate-all', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/generate:
+ *   post:
+ *     summary: Generate a QP order and letter for a faculty
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               facultyId:
+ *                 type: string
+ *               courseName:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Generated letter text
+ */
 // Generate QP Order
 router.post('/generate', async (req, res) => {
   try {
@@ -243,6 +338,21 @@ Head of the department`;
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/{facultyId}:
+ *   get:
+ *     summary: Get QP orders for a faculty
+ *     parameters:
+ *       - name: facultyId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of orders
+ */
 // Get QP Orders for a faculty
 router.get('/:facultyId', async (req, res) => {
   try {
@@ -256,6 +366,15 @@ router.get('/:facultyId', async (req, res) => {
 });
 
 // Generate arrear evaluation letter content
+/**
+ * @openapi
+ * /api/qporders/generate-arrear-eval-letter:
+ *   post:
+ *     summary: Generate arrear evaluation letter content
+ *     responses:
+ *       200:
+ *         description: Letter text
+ */
 router.post('/generate-arrear-eval-letter', async (req, res) => {
   try {
     const studentInputs = await StudentInput.find({ cegArrear: { $ne: 0 } });
@@ -279,6 +398,15 @@ router.post('/generate-arrear-eval-letter', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/exam-month:
+ *   get:
+ *     summary: Get exam month from latest QP order
+ *     responses:
+ *       200:
+ *         description: Exam month
+ */
 // GET: The examMonth from the latest QP Order
 router.get('/exam-month', async (req, res) => {
   try {
@@ -293,6 +421,29 @@ router.get('/exam-month', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/qporders/{orderId}/status:
+ *   patch:
+ *     summary: Update QP order status
+ *     parameters:
+ *       - name: orderId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Updated order
+ */
 router.patch('/:orderId/status', async (req, res) => {
   try {
     const { orderId } = req.params;

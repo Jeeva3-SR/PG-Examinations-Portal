@@ -7,6 +7,15 @@ const SeatingArrangement = require('../models/SeatingArrangement');
 const CompletedDuty = require('../models/CompletedDuty');
 const Faculty = require('../models/Faculty');
 
+/**
+ * @openapi
+ * /api/duties:
+ *   get:
+ *     summary: Get all duties
+ *     responses:
+ *       200:
+ *         description: Array of duties
+ */
 // Get all duties
 router.get('/', async (req, res) => {
   try {
@@ -17,6 +26,22 @@ router.get('/', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/duties:
+ *   post:
+ *     summary: Save duty assignments (batch)
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: array
+ *             items:
+ *               type: object
+ *     responses:
+ *       201:
+ *         description: Duties saved
+ */
 // POST /api/duties - Save duty assignments
 router.post('/', async (req, res) => {
     try {
@@ -32,6 +57,26 @@ router.post('/', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/{id}:
+ *   patch:
+ *     summary: Update duty by id
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Updated duty
+ */
 // Update a duty
 router.patch('/:id', async (req, res) => {
   try {
@@ -51,6 +96,21 @@ router.patch('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/duties/{id}:
+ *   delete:
+ *     summary: Delete a duty
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
 // Delete a duty
 router.delete('/:id', async (req, res) => {
   try {
@@ -65,6 +125,24 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/duties/range:
+ *   get:
+ *     summary: Get duties by date range
+ *     parameters:
+ *       - name: startDate
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: endDate
+ *         in: query
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of duties
+ */
 // Get duties by date range
 router.get('/range', async (req, res) => {
   try {
@@ -83,6 +161,21 @@ router.get('/range', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/duties/generate/{sessionId}:
+ *   post:
+ *     summary: Auto-generate duties for a session
+ *     parameters:
+ *       - name: sessionId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Duties generated
+ */
 // Generate duties for a session
 router.post('/generate/:sessionId', async (req, res) => {
   try {
@@ -157,6 +250,15 @@ router.post('/generate/:sessionId', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/duties/dates:
+ *   get:
+ *     summary: Get distinct dates and sessions
+ *     responses:
+ *       200:
+ *         description: Array of date/session objects
+ */
 // GET /api/duties/dates - Get distinct dates and sessions
 router.get('/dates', async (req, res) => {
     try {
@@ -171,6 +273,24 @@ router.get('/dates', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/rooms:
+ *   get:
+ *     summary: Get distinct rooms for a date and session
+ *     parameters:
+ *       - name: date
+ *         in: query
+ *         schema:
+ *           type: string
+ *       - name: session
+ *         in: query
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of room numbers
+ */
 // GET /api/duties/rooms?date=YYYY-MM-DD&session=FN - Get distinct rooms
 router.get('/rooms', async (req, res) => {
     const { date, session } = req.query;
@@ -197,6 +317,21 @@ router.get('/rooms', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/faculty/{facultyId}:
+ *   get:
+ *     summary: Get duties for a specific faculty
+ *     parameters:
+ *       - name: facultyId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Array of duties
+ */
 // GET /api/duties/faculty/:facultyId - Get duties for a specific faculty
 router.get('/faculty/:facultyId', async (req, res) => {
     try {
@@ -208,6 +343,20 @@ router.get('/faculty/:facultyId', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/completed-duties:
+ *   post:
+ *     summary: Mark a duty as completed or not completed
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Completion record
+ */
 // POST: Mark duty as completed or not completed
 router.post('/completed-duties', async (req, res) => {
     try {
@@ -236,6 +385,21 @@ router.post('/completed-duties', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/completed-duties/{dutyId}:
+ *   delete:
+ *     summary: Remove completed duty record
+ *     parameters:
+ *       - name: dutyId
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Deleted
+ */
 // DELETE: Remove completed duty record
 router.delete('/completed-duties/:dutyId', async (req, res) => {
     try {
@@ -251,6 +415,15 @@ router.delete('/completed-duties/:dutyId', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/completed-duties:
+ *   get:
+ *     summary: Get all completed duties
+ *     responses:
+ *       200:
+ *         description: Array of completed duty records
+ */
 // GET: Get all completed duties (return dutyId for each)
 router.get('/completed-duties', async (req, res) => {
     try {
@@ -262,6 +435,21 @@ router.get('/completed-duties', async (req, res) => {
     }
 });
 
+/**
+ * @openapi
+ * /api/duties/{id}/complete:
+ *   post:
+ *     summary: Mark duty as completed by id
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       201:
+ *         description: Duty marked completed
+ */
 // Mark duty as completed
 router.post('/:id/complete', async (req, res) => {
   try {

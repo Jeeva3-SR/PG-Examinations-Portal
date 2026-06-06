@@ -1,0 +1,52 @@
+%% System capabilities flowchart (Mermaid)
+flowchart TD
+  Browser[User Browser]
+
+  subgraph Frontend [Frontend (React)]
+    UI[SPA pages]
+    FAuth[Login / Auth UI]
+    FSeating[Seating plan UI]
+    FDuty[Duty assignment UI]
+    FClaims[Claims & Letters UI]
+    FQP[QP Order & Management]
+    FStudent[Student Input / Answer Sheets]
+    FAdmin[User & Role Management]
+  end
+
+  subgraph Backend [Backend (Express + Mongoose)]
+    API[REST API (/api/*)]
+    BAuth[Auth & Sessions (bcrypt)]
+    BRoutes[Domain Routes]
+    BServices[Business Logic / Services]
+    BModels[Mongoose Models]
+    BFiles[File uploads / storage]
+    BSeeds[Seeders & Scripts]
+    BGraphs[Graphgen & Dev Tools]
+  end
+
+  DB[(MongoDB)]
+
+  Browser --> UI
+  UI -->|navigates to| FAuth
+  UI --> FSeating
+  UI --> FDuty
+  UI --> FClaims
+  UI --> FQP
+  UI --> FStudent
+  UI --> FAdmin
+
+  UI -->|API calls (fetch/axios)| API
+  API --> BAuth
+  API --> BRoutes
+  BRoutes --> BServices
+  BServices --> BModels
+  BModels --> DB
+  BRoutes --> BFiles
+
+  UI --> BGraphs
+  BGraphs --> BFiles
+  BSeeds --> DB
+  BSeeds --> BRoutes
+
+  classDef caps fill:#e6fffa,stroke:#0f766e;
+  class Frontend,Backend caps;

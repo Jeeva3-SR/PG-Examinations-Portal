@@ -6,6 +6,15 @@ const AdvanceClaim = require('../models/AdvanceClaim');
 const ForwardedAdvanceRequisitionLetter = require('../models/ForwardedAdvanceRequisitionLetter');
 const moment = require('moment');
 
+/**
+ * @openapi
+ * /api/letters/advance-claim:
+ *   get:
+ *     summary: Calculate and save advance claim data
+ *     responses:
+ *       200:
+ *         description: Advance claim summary and totals
+ */
 // @route   GET /api/letters/advance-claim
 // @desc    Get data for the advance claim letter and save it
 // @access  Private (should be protected)
@@ -80,6 +89,24 @@ router.get('/advance-claim', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/letters/advance-requisition/forward:
+ *   post:
+ *     summary: Forward the advance requisition letter
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               letterText:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Forwarded successfully
+ */
 // POST /api/letters/advance-requisition/forward - Forward the advance requisition letter
 router.post('/advance-requisition/forward', async (req, res) => {
   try {
@@ -96,6 +123,15 @@ router.post('/advance-requisition/forward', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/letters/advance-requisition/forwarded:
+ *   get:
+ *     summary: Get latest pending forwarded advance requisition letter
+ *     responses:
+ *       200:
+ *         description: Latest forwarded pending letter
+ */
 // GET /api/letters/advance-requisition/forwarded - Get the latest forwarded advance requisition letter
 router.get('/advance-requisition/forwarded', async (req, res) => {
   try {
@@ -110,6 +146,15 @@ router.get('/advance-requisition/forwarded', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/letters/advance-requisition/latest:
+ *   get:
+ *     summary: Get the very latest forwarded advance requisition letter
+ *     responses:
+ *       200:
+ *         description: Latest forwarded letter
+ */
 // GET /api/letters/advance-requisition/latest - Get the very latest letter
 router.get('/advance-requisition/latest', async (req, res) => {
   try {
@@ -124,6 +169,21 @@ router.get('/advance-requisition/latest', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/letters/advance-requisition/{id}/approve:
+ *   put:
+ *     summary: Approve an advance requisition letter by id
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Approved
+ */
 // PUT /api/letters/advance-requisition/:id/approve - Approve latest letter
 router.put('/advance-requisition/:id/approve', async (req, res) => {
   try {
@@ -144,6 +204,21 @@ router.put('/advance-requisition/:id/approve', async (req, res) => {
   }
 });
 
+/**
+ * @openapi
+ * /api/letters/advance-requisition/{id}/reject:
+ *   put:
+ *     summary: Reject an advance requisition letter by id
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Rejected
+ */
 // PUT /api/letters/advance-requisition/:id/reject - Reject latest letter
 router.put('/advance-requisition/:id/reject', async (req, res) => {
   try {
