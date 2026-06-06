@@ -1,0 +1,86 @@
+# ==========================================
+# 1. DEPENDENCIES & PACKAGES
+# ==========================================
+# Node modules (Backend & Frontend)
+node_modules/
+**/node_modules/
+jspm_packages/
+web_components/
+
+# ==========================================
+# 2. ENVIRONMENT VARIABLES & SECRETS (CRITICAL!)
+# ==========================================
+# Never commit credentials, JWT secrets, or DB URIs to Git
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+config.env
+.dev.vars
+
+# ==========================================
+# 3. PRODUCTION BUILDS & OUTPUTS
+# ==========================================
+# React / Vite / Next.js build outputs
+dist/
+build/
+out/
+.next/
+.docusaurus/
+
+# Server-side / TypeScript compilation outputs
+lib/
+artifacts/
+
+# ==========================================
+# 4. LOGS AND RUNTIME DATA
+# ==========================================
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# MongoDB local data locks/dumps (if running DB locally)
+*.local.db
+dump/
+.mongodb/
+
+# ==========================================
+# 5. OS & EDITOR FILES
+# ==========================================
+# System files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+
+# IDEs and Text Editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# ==========================================
+# 6. TESTING & COVERAGE
+# ==========================================
+coverage/
+*.lcov
+.nyc_output
+.jest/
+
+# ==========================================
+# 7. OPTIONAL: PACKAGE MANAGER LOCKS
+# ==========================================
+# Uncomment the lines below ONLY if you want to ignore lockfiles 
+# (Highly recommended to KEEP lockfiles in version control for teams)
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml

@@ -1,0 +1,83 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-[#005A9C] text-white rounded-lg hover:bg-[#004A8C] 
+           focus:outline-none focus:ring-2 focus:ring-[#005A9C] focus:ring-offset-2
+           transition-all duration-200 ease-in-out shadow-sm hover:shadow-md;
+  }
+  
+  .btn-secondary {
+    @apply px-4 py-2 bg-[#F0F4F8] text-[#1f2937] rounded-lg hover:bg-[#E4E9F0]
+           focus:outline-none focus:ring-2 focus:ring-[#F0F4F8] focus:ring-offset-2
+           transition-all duration-200 ease-in-out shadow-sm hover:shadow-md;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2.5 border border-gray-200 rounded-lg 
+           focus:outline-none focus:ring-2 focus:ring-[#005A9C] focus:border-transparent
+           transition-all duration-200 ease-in-out;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-md hover:shadow-lg p-6
+           transition-all duration-300 ease-in-out;
+  }
+
+  .nav-link {
+    @apply flex items-center space-x-2 px-4 py-2.5 rounded-lg
+           text-gray-600 hover:text-[#005A9C] hover:bg-[#F0F4F8]
+           transition-all duration-200 ease-in-out;
+  }
+
+  .nav-link-active {
+    @apply bg-[#F0F4F8] text-[#005A9C] font-medium;
+  }
+}
+
+/* Custom Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Scrollbar Styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Base Styles */
+body {
+  @apply bg-[#f9f9f9] text-[#1f2937];
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
