@@ -20,9 +20,9 @@ const users = [
   },
   {
     userId: 'HOD001',
-    name: 'HOD User',
-    email: 'hod@example.com',
-    password: 'hodpass',
+    name: 'CSE HOD',
+    email: 'csehod@annauniv.edu',
+    password: 'csehod@pg',
     role: 'hod'
   }
 ];

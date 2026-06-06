@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const User = require('./models/User');
 const Faculty = require('./models/Faculty');
@@ -27,21 +28,21 @@ async function executeSeeding() {
         userId: 'HOD01', 
         name: 'Dr. Ramesh (HOD)', 
         email: 'csehod@annauniv.edu',
-        password: 'password123', 
+        password: await bcrypt.hash('csehod@pg', 10), 
         role: 'hod' 
       },
       { 
         userId: 'COORD01', 
         name: 'Dr. C. Valliyammai', 
         email: 'coordinator@annauniv.edu',
-        password: 'password123', 
+        password: await bcrypt.hash('coordinator@pg', 10), 
         role: 'coordinator' 
       },
       { 
         userId: 'FAC001', 
         name: 'Dr. Ramanujam', 
         email: 'ramanujam@annauniv.edu', 
-        password: 'passwordFac', 
+        password: await bcrypt.hash('passwordFac', 10), 
         role: 'faculty' 
       }
     ]);

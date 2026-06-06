@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
+const MONGODB_URI = 'mongodb://127.0.0.1:27017/exam-management';
+
 const users = [
   {
     userId: 'COORD001',
@@ -20,11 +22,12 @@ const users = [
 ];
 
 async function seed() {
-  await mongoose.connect('mongodb://localhost:27017/exam-management'); // Change DB name if needed
+  await mongoose.connect(MONGODB_URI);
   for (const userData of users) {
     const existing = await User.findOne({ userId: userData.userId });
     if (!existing) {
-      await User.create({ ...userData }); // Store password as plain text
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      await User.create({ ...userData, password: hashedPassword });
       console.log(`Seeded user: ${userData.userId}`);
     } else {
       console.log(`User already exists: ${userData.userId}`);

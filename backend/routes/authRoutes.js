@@ -57,14 +57,20 @@ router.post('/setup-admin', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { userId, email, password } = req.body;
+    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : email;
+    const normalizedUserId = typeof userId === 'string' ? userId.trim() : userId;
+    const normalizedPassword = typeof password === 'string' ? password.trim() : password;
+
     const user = await User.findOne({
       $or: [
-        userId ? { userId } : null,
-        email ? { email } : null
+        normalizedUserId ? { userId: normalizedUserId } : null,
+        normalizedEmail ? { email: normalizedEmail } : null
       ].filter(Boolean)
     });
 
-    if (!user || !(await user.comparePassword(password))) {
+    const passwordMatches = user ? await user.comparePassword(normalizedPassword) : false;
+
+    if (!user || !passwordMatches) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
