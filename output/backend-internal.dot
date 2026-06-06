@@ -1,0 +1,38 @@
+digraph B {
+ rankdir=LR; node [shape=box];
+"../../seed.js::(module)" -> "../../seed.js::executeSeeding";
+"../../addCoordinator.js::(module)" -> "../../addCoordinator.js::addCoordinator";
+"../../seed/seedRooms.js::(module)" -> "../../seed/seedRooms.js::seedRooms";
+"../seedUsers.js::(module)" -> "../seedUsers.js::seed";
+"../seedSpecialUsers.js::(module)" -> "../seedSpecialUsers.js::seed";
+"../seedCoordinator.js::(module)" -> "../seedCoordinator.js::seedCoordinator";
+"../initFaculty.js::(module)" -> "../initFaculty.js::initializeFaculty";
+"generate_all.js::collectFrontendAxiosCalls" -> "generate_all.js::parseCode";
+"generate_all.js::collectBackendRoutes" -> "generate_all.js::parseCode";
+"generate_all.js::collectFunctionDefsAndCalls" -> "generate_all.js::parseCode";
+"generate_all.js::collectFunctionDefsAndCalls" -> "generate_all.js::parseCode";
+"generate_all.js::main" -> "generate_all.js::collectFrontendAxiosCalls";
+"generate_all.js::main" -> "generate_all.js::collectBackendRoutes";
+"generate_all.js::main" -> "generate_all.js::generateDotFB";
+"generate_all.js::main" -> "generate_all.js::renderDotToSvg";
+"generate_all.js::main" -> "generate_all.js::collectFunctionDefsAndCalls";
+"generate_all.js::main" -> "generate_all.js::renderDotToSvg";
+"generate_all.js::main" -> "generate_all.js::collectFunctionDefsAndCalls";
+"generate_all.js::main" -> "generate_all.js::renderDotToSvg";
+"generate_all.js::(module)" -> "generate_all.js::main";
+"../../routes/studentInputRoutes.js::(module)" -> "../../routes/studentInputRoutes.js::isMissing";
+"../../routes/studentInputRoutes.js::(module)" -> "../../routes/studentInputRoutes.js::parseCount";
+"../../routes/studentInputRoutes.js::(module)" -> "../../routes/studentInputRoutes.js::parseCount";
+"../../routes/studentInputRoutes.js::(module)" -> "../../routes/studentInputRoutes.js::parseCount";
+"../../routes/studentInputRoutes.js::(module)" -> "../../routes/studentInputRoutes.js::parseCount";
+"../../routes/sessionRoutes.js::(module)" -> "../../routes/sessionRoutes.js::parseDateString";
+"../../routes/sessionRoutes.js::(module)" -> "../../routes/sessionRoutes.js::extractSessionAndDay";
+"../../routes/sessionRoutes.js::(module)" -> "../../routes/sessionRoutes.js::parseCourseInfo";
+"../../routes/sessionRoutes.js::(module)" -> "../../routes/sessionRoutes.js::parseDateString";
+"../../routes/sessionRoutes.js::(module)" -> "../../routes/sessionRoutes.js::extractSessionAndDay";
+"../../routes/sessionRoutes.js::(module)" -> "../../routes/sessionRoutes.js::parseCourseInfo";
+"../../routes/seatingArrangementRoutes.js::(module)" -> "../../routes/seatingArrangementRoutes.js::formatDateToExamString";
+"../../routes/dutyRoutes.js::(module)" -> "../../routes/dutyRoutes.js::shuffle";
+"../../middleware/auth.js::adminAuth" -> "../../middleware/auth.js::auth";
+
+}
