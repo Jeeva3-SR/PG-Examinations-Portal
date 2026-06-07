@@ -4,7 +4,9 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth, adminAuth } = require('../middleware/auth');
 
-// Create initial admin user
+// ==========================================
+// 1. SETUP INITIAL ADMIN (Public setup)
+// ==========================================
 router.post('/setup-admin', async (req, res) => {
   try {
     // Check if any admin exists
@@ -15,8 +17,14 @@ router.post('/setup-admin', async (req, res) => {
 
     const { name, email, password, department, employeeId } = req.body;
 
+    if (!name || !email || !password || !employeeId) {
+      return res.status(400).json({ error: 'Required fields are missing.' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+
     const existingUser = await User.findOne({
-      $or: [{ email }, { employeeId }]
+      $or: [{ email: normalizedEmail }, { employeeId }]
     });
 
     if (existingUser) {
@@ -27,7 +35,7 @@ router.post('/setup-admin', async (req, res) => {
 
     const admin = new User({
       name,
-      email,
+      email: normalizedEmail,
       password,
       department,
       employeeId,
@@ -45,40 +53,52 @@ router.post('/setup-admin', async (req, res) => {
         email: admin.email,
         role: admin.role,
         department: admin.department,
-        employeeId: admin.employeeId
+        employeeId: admin.employeeId,
+        userId: admin.userId,
+        facultyId: admin.userId // Backward-compatibility safety key
       }
     });
   } catch (error) {
+    console.error('Setup admin error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Login route
+// ==========================================
+// 2. LOGIN ROUTE (🛡️ Fixed Naming Disconnects)
+// ==========================================
 router.post('/login', async (req, res) => {
   try {
-    const { userId, email, password } = req.body;
-    const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : email;
-    const normalizedUserId = typeof userId === 'string' ? userId.trim() : userId;
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
     const normalizedPassword = typeof password === 'string' ? password.trim() : password;
 
-    const user = await User.findOne({
-      $or: [
-        normalizedUserId ? { userId: normalizedUserId } : null,
-        normalizedEmail ? { email: normalizedEmail } : null
-      ].filter(Boolean)
-    });
-
+    // Fetch account profile matching email parameters
+    const user = await User.findOne({ email: normalizedEmail });
     const passwordMatches = user ? await user.comparePassword(normalizedPassword) : false;
 
     if (!user || !passwordMatches) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
+    // Safety fallback block if user account is disabled
+    if (user.isActive === false) {
+      return res.status(403).json({ error: 'Your account has been deactivated.' });
+    }
+
     const token = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '1h' }
     );
+
+    // Dynamic resolution layer capturing internal identifiers safely
+    const finalFacultyId = user.userId || user.employeeId || user._id.toString();
 
     res.json({
       token,
@@ -86,42 +106,52 @@ router.post('/login', async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        userId: user.userId,
         role: user.role,
         department: user.department,
-        employeeId: user.employeeId
+        employeeId: user.employeeId,
+        userId: finalFacultyId,      // Matches views looking for data.userId
+        facultyId: finalFacultyId   // 🛡️ FIXES QPORDERS ROUTE LOOPS
       }
     });
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Public registration route
+// ==========================================
+// 3. PUBLIC REGISTRATION ROUTE
+// ==========================================
 router.post('/register', async (req, res) => {
-  console.log('POST /api/register hit', req.body);
   try {
-    const { userId, name, email, password, role } = req.body;
+    const { userId, name, email, password } = req.body;
 
     // Validate required fields
-    if (!userId || !name || !email || !password || !role) {
+    if (!userId || !name || !email || !password) {
       return res.status(400).json({ error: 'All fields are required.' });
     }
 
-    // Check for duplicate userId or email
-    const existingUser = await User.findOne({ $or: [{ userId }, { email }] });
+    const normalizedEmail = email.trim().toLowerCase();
+
+    // Check for duplicate userId or email to ensure database consistency
+    const existingUser = await User.findOne({ 
+      $or: [{ userId }, { email: normalizedEmail }] 
+    });
+    
     if (existingUser) {
       return res.status(400).json({ error: 'User with this userId or email already exists.' });
     }
 
-    // Create and save new user
+    // Create and save new user doc
     const user = new User({
       userId,
       name,
-      email,
+      email: normalizedEmail,
       password,
-      role
+      role: 'faculty', // Force safe baseline tier privileges
+      isActive: true   // Ensures immediate middleware validation clearance
     });
+    
     await user.save();
 
     res.status(201).json({ message: 'Registration successful. You can now log in.' });
@@ -131,9 +161,13 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Get current user profile
+// ==========================================
+// 4. USER PROFILE ROUTE (Protected)
+// ==========================================
 router.get('/profile', auth, async (req, res) => {
   try {
+    const finalFacultyId = req.user.userId || req.user.employeeId || req.user._id.toString();
+    
     res.json({
       user: {
         id: req.user._id,
@@ -143,7 +177,9 @@ router.get('/profile', auth, async (req, res) => {
         department: req.user.department,
         employeeId: req.user.employeeId,
         bankAccount: req.user.bankAccount,
-        ifscCode: req.user.ifscCode
+        ifscCode: req.user.ifscCode,
+        userId: finalFacultyId,
+        facultyId: finalFacultyId // Backward-compatibility safety key
       }
     });
   } catch (error) {
@@ -151,7 +187,9 @@ router.get('/profile', auth, async (req, res) => {
   }
 });
 
-// Update user profile
+// ==========================================
+// 5. UPDATE PROFILE ROUTE (Protected)
+// ==========================================
 router.patch('/profile', auth, async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['name', 'password', 'bankAccount', 'ifscCode'];
@@ -165,6 +203,8 @@ router.patch('/profile', auth, async (req, res) => {
     updates.forEach(update => req.user[update] = req.body[update]);
     await req.user.save();
 
+    const finalFacultyId = req.user.userId || req.user.employeeId || req.user._id.toString();
+
     res.json({
       message: 'Profile updated successfully',
       user: {
@@ -175,7 +215,9 @@ router.patch('/profile', auth, async (req, res) => {
         department: req.user.department,
         employeeId: req.user.employeeId,
         bankAccount: req.user.bankAccount,
-        ifscCode: req.user.ifscCode
+        ifscCode: req.user.ifscCode,
+        userId: finalFacultyId,
+        facultyId: finalFacultyId
       }
     });
   } catch (error) {
@@ -183,7 +225,9 @@ router.patch('/profile', auth, async (req, res) => {
   }
 });
 
-// Get all users (admin only)
+// ==========================================
+// 6. GET ALL USERS (🛡️ Secured with adminAuth)
+// ==========================================
 router.get('/users', adminAuth, async (req, res) => {
   try {
     const users = await User.find({}, '-password');
@@ -193,12 +237,18 @@ router.get('/users', adminAuth, async (req, res) => {
   }
 });
 
-// Update user status (admin only)
+// ==========================================
+// 7. CHANGE USER STATUS (🛡️ Secured with adminAuth)
+// ==========================================
 router.patch('/users/:id/status', adminAuth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (typeof req.body.isActive !== 'boolean') {
+      return res.status(400).json({ error: 'isActive must be a boolean value' });
     }
 
     user.isActive = req.body.isActive;
@@ -219,4 +269,4 @@ router.patch('/users/:id/status', adminAuth, async (req, res) => {
   }
 });
 
-module.exports = router; 
+module.exports = router;

@@ -5,34 +5,17 @@ import axios from 'axios';
 const UnifiedLogin = () => {
   const navigate = useNavigate();
 
-  const roleCredentials = {
-    coordinator: {
-      email: 'coordinator@annauniv.edu',
-      password: 'coordinator@pg',
-      navigateTo: '/dashboard',
-      storageRole: 'Coordinator',
-    },
-    hod: {
-      email: 'csehod@annauniv.edu',
-      password: 'csehod@pg',
-      navigateTo: '/hod/dashboard',
-      storageRole: 'HOD',
-    },
-  };
-
   // State Management
-  const [role, setRole] = useState('faculty'); // Defaults to faculty
-  const [facultyId, setFacultyId] = useState('');
+  const [role, setRole] = useState('faculty'); // Defaults to faculty workflow
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Handle input switches smoothly
+  // Clear inputs when switching roles
   const handleRoleChange = (e) => {
     setRole(e.target.value);
     setError('');
-    setFacultyId('');
     setEmail('');
     setPassword('');
   };
@@ -42,94 +25,56 @@ const UnifiedLogin = () => {
     setError('');
     setLoading(true);
 
+    if (!email.trim() || !password) {
+      setError('Please enter both Email and Password.');
+      setLoading(false);
+      return;
+    }
+
     try {
-      // 1. FACULTY LOGIN LOGIC
-      if (role === 'faculty') {
-        if (!facultyId.trim()) {
-          setError('Please enter your Faculty ID');
-          setLoading(false);
-          return;
-        }
+      // Send authentic login payload across ALL roles to your production route
+      const res = await axios.post('/api/login', { 
+        email: email.trim(), 
+        password: password 
+      });
 
-        try {
-          // Try faculty endpoint first
-          const res = await axios.get(`/api/faculty/${facultyId}`);
-          localStorage.setItem('userRole', 'Faculty');
-          localStorage.setItem('loggedInFaculty', JSON.stringify(res.data));
-          navigate('/faculty');
-          return;
-        } catch (err) {
-          // Fallback to generic users endpoint
-        }
+      const backendUser = res.data?.user;
+      const token = res.data?.token;
 
-        try {
-          const userRes = await axios.get(`/api/users/${facultyId}`);
-          if (userRes.data && userRes.data.role === 'faculty') {
-            const userObj = { ...userRes.data, facultyId: userRes.data.userId };
-            localStorage.setItem('userRole', 'Faculty');
-            localStorage.setItem('loggedInFaculty', JSON.stringify(userObj));
-            navigate('/faculty');
-          } else {
-            setError('Invalid Faculty ID');
-          }
-        } catch (err) {
-          setError('Invalid Faculty ID');
-        }
+      // Ensure a valid token exists and store it for authenticated middleware requests
+      if (token) {
+        localStorage.setItem('token', token);
       }
 
-      // 2. COORDINATOR LOGIN LOGIC
-      else if (role === 'coordinator') {
-        if (!email || !password) {
-          setError('Please enter both Email and Password.');
-          setLoading(false);
-          return;
-        }
-        try {
-          const res = await axios.post('/api/login', { email, password });
-          if (res.data?.user?.role === 'coordinator') {
-            localStorage.setItem('userRole', 'Coordinator');
-            navigate('/dashboard');
-            return;
-          }
-        } catch (apiError) {
-          const fallback = roleCredentials.coordinator;
-          if (email.trim().toLowerCase() === fallback.email && password === fallback.password) {
-            localStorage.setItem('userRole', fallback.storageRole);
-            navigate(fallback.navigateTo);
-            return;
-          }
-          throw apiError;
-        }
-        setError('Invalid email or password for coordinator.');
+      // ==========================================
+      // ROLE-BASED REDIRECTION LOGIC
+      // ==========================================
+      if (role === 'faculty' && backendUser?.role === 'faculty') {
+        localStorage.setItem('userRole', 'Faculty');
+        localStorage.setItem('loggedInFaculty', JSON.stringify(backendUser));
+        navigate('/faculty');
+        return;
+      } 
+      
+      else if (role === 'coordinator' && backendUser?.role === 'coordinator') {
+        localStorage.setItem('userRole', 'Coordinator');
+        navigate('/dashboard');
+        return;
+      } 
+      
+      else if (role === 'hod' && backendUser?.role === 'hod') {
+        localStorage.setItem('userRole', 'HOD');
+        navigate('/hod/dashboard');
+        return;
       }
 
-      // 3. HOD LOGIN LOGIC
-      else if (role === 'hod') {
-        if (!email || !password) {
-          setError('Please enter both Email and Password.');
-          setLoading(false);
-          return;
-        }
-        try {
-          const res = await axios.post('/api/login', { email, password });
-          if (res.data?.user?.role === 'hod') {
-            localStorage.setItem('userRole', 'HOD');
-            navigate('/hod/dashboard');
-            return;
-          }
-        } catch (apiError) {
-          const fallback = roleCredentials.hod;
-          if (email.trim().toLowerCase() === fallback.email && password === fallback.password) {
-            localStorage.setItem('userRole', fallback.storageRole);
-            navigate(fallback.navigateTo);
-            return;
-          }
-          throw apiError;
-        }
-        setError('Invalid email or password for HOD.');
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || `Authentication failed for ${role.toUpperCase()}.`);
+      // If backend reports a profile role that doesn't match the selected dropdown tier
+      setError(`Authorized profile found, but it does not match the selected tier: ${role.toUpperCase()}.`);
+
+    } catch (apiError) {
+      console.error('API Authentication failure:', apiError);
+      // Strictly output the backend response error message or a generic fallback
+      setError(apiError.response?.data?.error || 'Authentication failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
@@ -164,7 +109,7 @@ const UnifiedLogin = () => {
         {/* Dynamic Helpful Footer Link */}
         <div className="z-10 text-sm text-slate-400">
           <Link to="/about" className="hover:text-white transition-colors duration-200 underline underline-offset-4">
-            About Us&rarr;
+            About Us &rarr;
           </Link>
         </div>
       </div>
@@ -205,63 +150,44 @@ const UnifiedLogin = () => {
 
             <hr className="border-slate-100 my-4" />
 
-            {/* CONDITIONAL RENDERING: Faculty Input Field */}
-            {role === 'faculty' && (
-              <div className="animate-fadeIn duration-200">
-                <label htmlFor="facultyId" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
-                  Faculty ID 
+            {/* UNIFIED INPUT FIELDS FOR ALL ROLES */}
+            <div className="space-y-5 animate-fadeIn duration-200">
+              <div>
+                <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+                  Official Email Address
                 </label>
                 <input
-                  id="facultyId"
-                  type="text"
+                  id="email"
+                  type="email"
                   required
-                  value={facultyId}
-                  onChange={(e) => setFacultyId(e.target.value)}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl py-3 px-4 text-slate-800 transition-all duration-200 outline-none focus:ring-2 focus:ring-indigo-100 placeholder-slate-400"
-                  placeholder=""
+                  placeholder="name@institution.edu"
                 />
               </div>
-            )}
-
-            {/* CONDITIONAL RENDERING: HOD & Coordinator Inputs */}
-            {(role === 'coordinator' || role === 'hod') && (
-              <div className="space-y-5 animate-fadeIn duration-200">
-                <div>
-                  <label htmlFor="email" className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
-                    Official Email Address
+              
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
+                    Password
                   </label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl py-3 px-4 text-slate-800 transition-all duration-200 outline-none focus:ring-2 focus:ring-indigo-100 placeholder-slate-400"
-                    placeholder="name@institution.edu"
-                  />
                 </div>
-                <div>
-                  <div className="flex justify-between items-center mb-2">
-                    <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
-                      Password
-                    </label>
-                  </div>
-                  <input
-                    id="password"
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl py-3 px-4 text-slate-800 transition-all duration-200 outline-none focus:ring-2 focus:ring-indigo-100 placeholder-slate-400"
-                    placeholder="••••••••"
-                  />
-                </div>
+                <input
+                  id="password"
+                  type="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full bg-white border border-slate-200 focus:border-indigo-500 rounded-xl py-3 px-4 text-slate-800 transition-all duration-200 outline-none focus:ring-2 focus:ring-indigo-100 placeholder-slate-400"
+                  placeholder="••••••••"
+                />
               </div>
-            )}
+            </div>
 
             {/* Error Notifications */}
             {error && (
-              <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start space-x-2 text-red-700 text-sm font-medium animate-shake">
+              <div className="bg-red-50 border border-red-100 rounded-xl p-3 flex items-start space-x-2 text-red-700 text-sm font-medium">
                 <svg className="w-5 h-5 flex-shrink-0 text-red-500 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
@@ -289,7 +215,7 @@ const UnifiedLogin = () => {
             </button>
           </form>
 
-          {/* Action Context Contextual Footer items */}
+          {/* Contextual Footer Layout */}
           <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center text-xs space-y-2 sm:space-y-0">
             {role === 'faculty' ? (
               <Link to="/faculty/register" className="text-indigo-600 hover:text-indigo-800 font-semibold transition-colors duration-200">
