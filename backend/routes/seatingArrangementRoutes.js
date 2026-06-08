@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Session = require('../models/Session');
 const Room = require('../models/Room');
-const Student = require('../models/Student');
+const Student = require('../models/Students');
 const SeatingArrangement = require('../models/SeatingArrangement');
 
 // Helper to format date as "DD-MMM-YY"

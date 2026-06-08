@@ -167,29 +167,6 @@ const FacultyRegister = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-1.5">
-                Assigned System Role
-              </label>
-              <div className="relative">
-                <select
-                  name="role"
-                  required
-                  value={form.role}
-                  onChange={handleChange}
-                  className="w-full appearance-none bg-slate-50/50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl py-2.5 px-4 text-slate-800 text-sm font-medium transition-all outline-none focus:ring-2 focus:ring-indigo-100"
-                >
-                  <option value="faculty">Faculty</option>
-                  <option value="coordinator">Coordinator</option>
-                  <option value="hod">HOD</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
 
             {/* Notification Elements */}
             {error && (

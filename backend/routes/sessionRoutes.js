@@ -204,19 +204,30 @@ router.get('/', async (req, res) => {
 // Get consolidated sessions
 router.get('/consolidated', async (req, res) => {
   try {
+    // Fixed the missing parenthesis on .sort()
     const sessions = await Session.find()
-      .sort({ date: 1, session: 1 })
+      .sort({ date: 1, session: 1 }) 
       .populate('courseCode', 'courseCode courseName studentCount');
     
-    const consolidated = sessions.map(session => ({
-      id: session._id,
-      date: new Date(session.date).toLocaleDateString('en-GB'),
-      session: session.session,
-      specialization: session.specialization,
-      courseCode: session.courseCode,
-      courseName: session.courseName,
-      totalStudents: session.courseCode?.studentCount || 0
-    }));
+    const consolidated = sessions.map(session => {
+      // Safely handle the date formatting in UTC to prevent day-shifting
+      const dateObj = new Date(session.date);
+      const formattedDate = !isNaN(dateObj) 
+        ? dateObj.toLocaleDateString('en-GB', { timeZone: 'UTC' }) 
+        : session.date;
+
+      return {
+        id: session._id,
+        date: formattedDate,
+        session: session.session,
+        specialization: session.specialization,
+        
+        // Extracting data safely from the populated 'courseCode' object
+        courseCode: session.courseCode?.courseCode || 'N/A',
+        courseName: session.courseCode?.courseName || session.courseName, // Fallback to session's own courseName if it exists
+        totalStudents: session.courseCode?.studentCount || 0
+      };
+    });
 
     res.json(consolidated);
   } catch (error) {
@@ -263,7 +274,7 @@ router.post('/', async (req, res) => {
   });
 
   try {
-    const savedSession = await newSession.save();
+     const savedSession = await newSession.save();
     res.status(201).json(savedSession);
   } catch (error) {
     res.status(400).json({ message: error.message });

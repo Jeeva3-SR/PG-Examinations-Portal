@@ -48,6 +48,7 @@ app.use('/api/coordinator', require('./routes/coordinatorRoutes'));
 app.use('/api/users', require('./routes/usersRoutes'));
 app.use('/api', require('./routes/authRoutes'));
 
+
 // Swagger UI - API documentation
 if (swaggerJSDoc) {
   const options = {
