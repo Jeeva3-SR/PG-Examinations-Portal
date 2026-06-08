@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const swaggerUi = require('swagger-ui-express');
 let swaggerDocument = undefined;
 let swaggerJSDoc = undefined;
