@@ -21,6 +21,7 @@
   import SessionView from './pages/coordinator/SessionView';
   import CoordinatorResetPassword from './pages/coordinator/CoordinatorResetPassword';
   import AnswerSheetRequest from './pages/coordinator/AnswerSheetRequest';
+  import SubjectAssignment from './pages/coordinator/SubjectAssignment';
 
   import ConsolidatedSessions from './pages/hod/ConsolidatedSessions';
  
@@ -72,6 +73,7 @@
                 <Route path="/assign-qpsetter" element={<AssignQPSetterTopLevel />} />
                 <Route path="/letters" element={<AnswerSheetRequest />} />
                 <Route path="/settlement-all-pages" element={<SettlementAllPages />} />
+                <Route path="/subject-assignments" element={<SubjectAssignment />} />
                 <Route path="/coordinator/reset-password" element={<CoordinatorResetPassword />} />
               </Route>
             </Route>

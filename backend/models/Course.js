@@ -66,8 +66,12 @@ const facultySchema = new mongoose.Schema({
 
   presentPay: Number,
 
-  natureOfAppointment: String
+  natureOfAppointment: String,
 
+  bankAccounts: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'BankAccount'
+  }]
 }, {
   timestamps: true
 });

@@ -7,6 +7,7 @@ const menuItems = [
   { path: '/student-input', label: 'Student Input', icon: '👨‍🎓' },
   { path: '/sessions', label: 'Session Views', icon: '📅' },
   { path: '/assign-qpsetter', label: 'Assign QP Setter', icon: '📝' },
+  { path: '/subject-assignments', label: 'Subject Assignments', icon: '📚' },
   { path: '/dashboard/seating-arrangement', label: 'Seating Arrangment', icon: '🪑' },
   { path: '/duties', label: 'Duty Assignments', icon: '👥' },
   { path: '/claims', label: 'Expense Claims', icon: '💸' },

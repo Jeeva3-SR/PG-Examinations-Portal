@@ -7,7 +7,8 @@ import {
   ClipboardList,
   FileText,
   DollarSign,
-  UserPlus
+  UserPlus,
+  BookOpen
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -54,6 +55,13 @@ const Dashboard = () => {
       icon: UserPlus,
       path: '/assign-qpsetter',
       color: 'text-cyan-600 bg-cyan-50 border-cyan-100'
+    },
+    {
+      title: 'Subject Assignments',
+      description: 'Map faculty to subjects by course code, year, semester, and batch.',
+      icon: BookOpen,
+      path: '/subject-assignments',
+      color: 'text-teal-600 bg-teal-50 border-teal-100'
     }
   ];
 

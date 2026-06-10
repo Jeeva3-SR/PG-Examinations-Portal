@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 
 const EvaluatorDetails = () => {
   const [formData, setFormData] = useState({
@@ -7,6 +8,27 @@ const EvaluatorDetails = () => {
     bankAccountNumber: '',
     ifscCode: '',
   });
+  const [submitting, setSubmitting] = useState(false);
+  const [accounts, setAccounts] = useState([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
+
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await axios.get('/api/bank-accounts', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setAccounts(res.data);
+    } catch {
+      // silently fail
+    } finally {
+      setLoadingAccounts(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchAccounts();
+  }, [fetchAccounts]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -16,20 +38,32 @@ const EvaluatorDetails = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submitted Evaluator Details:', formData);
-    alert('Evaluator details submitted successfully!');
-    setFormData({
-      fullName: '',
-      panNumber: '',
-      bankAccountNumber: '',
-      ifscCode: '',
-    });
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post('/api/bank-accounts', formData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      alert('Evaluator details submitted successfully!');
+      setFormData({
+        fullName: '',
+        panNumber: '',
+        bankAccountNumber: '',
+        ifscCode: '',
+      });
+      fetchAccounts();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to submit evaluator details');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="bg-white rounded-lg shadow p-6">
       <h2 className="text-2xl font-bold mb-6">Submit Evaluator Details</h2>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
@@ -96,13 +130,49 @@ const EvaluatorDetails = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+          disabled={submitting}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
-          Submit Details
+          {submitting ? 'Submitting...' : 'Submit Details'}
         </button>
       </form>
+    </div>
+
+    <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-xl font-bold mb-4">Saved Bank Accounts</h3>
+      {loadingAccounts ? (
+        <p className="text-gray-500">Loading...</p>
+      ) : accounts.length === 0 ? (
+        <p className="text-gray-500">No bank accounts saved yet.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead>
+              <tr className="border-b bg-gray-50">
+                <th className="p-3 font-medium">Full Name</th>
+                <th className="p-3 font-medium">PAN Number</th>
+                <th className="p-3 font-medium">Account Number</th>
+                <th className="p-3 font-medium">IFSC Code</th>
+                <th className="p-3 font-medium">Submitted</th>
+              </tr>
+            </thead>
+            <tbody>
+              {accounts.map((acc) => (
+                <tr key={acc._id} className="border-b hover:bg-gray-50">
+                  <td className="p-3">{acc.fullName}</td>
+                  <td className="p-3">{acc.panNumber}</td>
+                  <td className="p-3">{acc.bankAccountNumber}</td>
+                  <td className="p-3">{acc.ifscCode}</td>
+                  <td className="p-3">{new Date(acc.createdAt).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
     </div>
   );
 };
 
-export default EvaluatorDetails; 
+export default EvaluatorDetails;
