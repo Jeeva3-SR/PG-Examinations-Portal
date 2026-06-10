@@ -18,6 +18,8 @@
   import SeatingArrangement from './pages/coordinator/SeatingArrangement';
   import AssignQPSetterTopLevel from './pages/coordinator/assign-qpsetter';
   import DutyAssignment from './pages/coordinator/DutyAssignment';
+  import SeatingPlan from './pages/coordinator/SeatingPlan';
+  import RoomManagement from './pages/coordinator/RoomManagement';
   import SessionView from './pages/coordinator/SessionView';
   import CoordinatorResetPassword from './pages/coordinator/CoordinatorResetPassword';
   import AnswerSheetRequest from './pages/coordinator/AnswerSheetRequest';
@@ -43,6 +45,8 @@
   import ResetPasswordForm from './pages/ResetPasswordForm';
 
   import ProtectedRoute from './components/ProtectedRoute';
+  import AllFaculties from './pages/AllFaculties';
+  import AllSubjects from './pages/AllSubjects';
 
   const AppContent = () => {
     const location = useLocation();
@@ -77,10 +81,14 @@
                 <Route path="/claims" element={<Claims />} />
                 <Route path="/users" element={<UserManagement />} />
                 <Route path="/dashboard/seating-arrangement" element={<SeatingArrangement />} />
+                <Route path="/dashboard/seating-plan" element={<SeatingPlan />} />
+                <Route path="/dashboard/rooms" element={<RoomManagement />} />
                 <Route path="/assign-qpsetter" element={<AssignQPSetterTopLevel />} />
                 <Route path="/letters" element={<AnswerSheetRequest />} />
                 <Route path="/settlement-all-pages" element={<SettlementAllPages />} />
                 <Route path="/subject-assignments" element={<SubjectAssignment />} />
+                <Route path="/dashboard/all-faculties" element={<AllFaculties />} />
+                <Route path="/dashboard/all-subjects" element={<AllSubjects />} />
                 <Route path="/coordinator/reset-password" element={<CoordinatorResetPassword />} />
               </Route>
             </Route>
@@ -99,6 +107,8 @@
                 <Route path="letters" element={<Letters />} />
                 <Route path="signoff" element={<SignOff />} />
                 <Route path="reset-password" element={<ResetPassword />} />
+                <Route path="all-faculties" element={<AllFaculties />} />
+                <Route path="all-subjects" element={<AllSubjects />} />
               </Route>
             </Route>
 
@@ -114,6 +124,8 @@
                 <Route path="evaluator-details" element={<EvaluatorDetails />} />
                 <Route path="release-claim" element={<ReleaseClaim />} />
                 <Route path="update-profile" element={<UpdateProfile />} />
+                <Route path="all-faculties" element={<AllFaculties />} />
+                <Route path="all-subjects" element={<AllSubjects />} />
               </Route>
             </Route>
 

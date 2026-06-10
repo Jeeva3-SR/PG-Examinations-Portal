@@ -19,17 +19,20 @@ const HODDashboard = () => {
     }
   }, []);
 
-  // Professional metric panels data config mirroring your core layout styles
+  const quickActions = [
+    { title: "Approve QP Order Letters", desc: "Review, sign off on, and dispatch official question paper compilation requests to assigned faculty panels.", icon: "📋", path: "/hod/approve-qporders" },
+    { title: "Department Sign-Off Terminal", desc: "Digitally sign off, validate, and close out exam registration lists and session packets.", icon: "✅", path: "/hod/signoff" },
+    { title: "All Faculties", desc: "View complete list of faculty members across the institution.", icon: "👨‍🏫", path: "/hod/all-faculties" },
+    { title: "All Subjects", desc: "Browse master list of all courses and subjects offered.", icon: "📖", path: "/hod/all-subjects" },
+    { title: "Reset Portal Password", desc: "Maintain and update your department's local secure authentication credentials.", icon: "🔑", path: "/hod/reset-password" },
+  ];
+
   const analyticsMetrics = [
     { label: "Consolidated Sessions", value: "14", color: "text-indigo-600 bg-indigo-50 border-indigo-100", icon: "📊", path: "/hod/consolidated-sessions" },
     { label: "QP Setting Matrix", value: "08", color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: "👥", path: "/hod/assign-qpsetter" },
     { label: "Pending Letters", value: "03", color: "text-amber-600 bg-amber-50 border-amber-100", icon: "📈", path: "/hod/letters" },
-  ];
-
-  const quickActions = [
-    { title: "Approve QP Order Letters", desc: "Review, sign off on, and dispatch official question paper compilation requests to assigned faculty panels.", icon: "📋", path: "/hod/approve-qporders" },
-    { title: "Department Sign-Off Terminal", desc: "Digitally sign off, validate, and close out exam registration lists and session packets.", icon: "✅", path: "/hod/signoff" },
-    { title: "Reset Portal Password", desc: "Maintain and update your department's local secure authentication credentials.", icon: "🔑", path: "/hod/reset-password" },
+    { label: "All Faculties", value: "-", color: "text-sky-600 bg-sky-50 border-sky-100", icon: "👨‍🏫", path: "/hod/all-faculties" },
+    { label: "All Subjects", value: "-", color: "text-violet-600 bg-violet-50 border-violet-100", icon: "📖", path: "/hod/all-subjects" },
   ];
 
   return (

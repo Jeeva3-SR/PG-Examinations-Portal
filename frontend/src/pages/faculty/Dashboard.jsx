@@ -31,6 +31,8 @@ const FacultyDashboard = () => {
   const quickActions = [
     { title: "Maintain Profile Parameters", desc: "Update your official academic bio, payment matrix tiers, and core expertise sectors.", icon: "📝", path: "/faculty/update-profile" },
     { title: "Evaluator Status Indicators", desc: "Access central answer script delivery requests and validation assignments.", icon: "🎯", path: "/faculty/evaluator-details" },
+    { title: "All Faculties", desc: "View complete list of faculty members across the institution.", icon: "👨‍🏫", path: "/faculty/all-faculties" },
+    { title: "All Subjects", desc: "Browse master list of all courses and subjects offered.", icon: "📖", path: "/faculty/all-subjects" },
     { title: "Release Financial Claims", desc: "Process outstanding monetary settlement profiles for completed examinations.", icon: "💸", path: "/faculty/release-claim" },
   ];
 

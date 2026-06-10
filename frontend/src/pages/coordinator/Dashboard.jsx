@@ -8,7 +8,9 @@ import {
   FileText,
   DollarSign,
   UserPlus,
-  BookOpen
+  BookOpen,
+  GraduationCap,
+  Library
 } from 'lucide-react';
 
 const Dashboard = () => {
@@ -62,6 +64,20 @@ const Dashboard = () => {
       icon: BookOpen,
       path: '/subject-assignments',
       color: 'text-teal-600 bg-teal-50 border-teal-100'
+    },
+    {
+      title: 'All Faculties',
+      description: 'View complete list of faculty members across the institution.',
+      icon: GraduationCap,
+      path: '/dashboard/all-faculties',
+      color: 'text-sky-600 bg-sky-50 border-sky-100'
+    },
+    {
+      title: 'All Subjects',
+      description: 'Browse master list of all courses and subjects offered.',
+      icon: Library,
+      path: '/dashboard/all-subjects',
+      color: 'text-violet-600 bg-violet-50 border-violet-100'
     }
   ];
 

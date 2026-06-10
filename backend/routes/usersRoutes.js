@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const bcrypt = require('bcryptjs');
+const { auth } = require('../middleware/auth');
+
+router.get('/', auth, async (req, res) => {
+  try {
+    const users = await User.find({}, '-password').sort({ name: 1 });
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
 
 // Get user by userId
 router.get('/:userId', async (req, res) => {

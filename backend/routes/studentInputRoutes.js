@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const StudentInput = require('../models/StudentInput');
+const { uploadFile } = require('../utils/s3');
+
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 // Get all student inputs
 router.get('/', async (req, res) => {
@@ -120,6 +124,33 @@ router.get('/range', async (req, res) => {
   }
 });
 
+// Get student input by session ref (or by session data fields for backward compat)
+router.get('/by-session/:sessionId', async (req, res) => {
+  try {
+    const Session = require('../models/Session');
+    // First try matching by sessionRef
+    let entry = await StudentInput.findOne({ sessionRef: req.params.sessionId });
+    if (entry) return res.json(entry);
+    // Fallback: find the session doc, then match by its fields
+    const session = await Session.findById(req.params.sessionId);
+    if (!session) return res.json(null);
+    entry = await StudentInput.findOne({
+      courseCode: session.courseCode,
+      specialization: session.specialization,
+      date: session.date,
+      session: session.session
+    });
+    // If found, backfill the sessionRef for future lookups
+    if (entry) {
+      entry.sessionRef = req.params.sessionId;
+      await entry.save();
+    }
+    res.json(entry);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Get student inputs by specialization
 router.get('/specialization/:specialization', async (req, res) => {
   try {
@@ -147,6 +178,57 @@ router.put('/:id', async (req, res) => {
     res.json(updatedInput);
   } catch (error) {
     res.status(400).json({ message: error.message });
+  }
+});
+
+// Update upload status for a student input field
+router.patch('/:id/status', async (req, res) => {
+  try {
+    const { field, status } = req.body;
+    const validFields = ['cegRegularStatus', 'cegArrearStatus', 'mitRegularStatus', 'mitArrearStatus'];
+    const validStatuses = ['pending', 'uploaded', 'skipped'];
+
+    if (!validFields.includes(field)) {
+      return res.status(400).json({ message: `Invalid field. Must be one of: ${validFields.join(', ')}` });
+    }
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
+    }
+
+    const updated = await StudentInput.findByIdAndUpdate(
+      req.params.id,
+      { [field]: status },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ message: 'Entry not found' });
+    }
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Upload Excel file for a student input field
+router.patch('/:id/upload', upload.single('file'), async (req, res) => {
+  try {
+    const { field } = req.body;
+    const validFields = ['cegRegularStatus', 'cegArrearStatus', 'mitRegularStatus', 'mitArrearStatus'];
+    if (!validFields.includes(field)) {
+      return res.status(400).json({ message: `Invalid field. Must be one of: ${validFields.join(', ')}` });
+    }
+    const entry = await StudentInput.findById(req.params.id);
+    if (!entry) return res.status(404).json({ message: 'Entry not found' });
+
+    const keyField = field.replace('Status', 'Key');
+    const fileKey = await uploadFile(req.params.id, field, req.file.buffer);
+    entry[keyField] = fileKey;
+    entry[field] = 'uploaded';
+    await entry.save();
+    res.json(entry);
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ message: error.message });
   }
 });
 

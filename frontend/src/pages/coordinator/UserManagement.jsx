@@ -21,11 +21,18 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/users');
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('No auth token found. Please log in again.');
+        return;
+      }
+      const response = await axios.get('/api/users', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       setUsers(response.data);
-      console.log('Fetched users:', response.data);
     } catch (error) {
-      setError('Error fetching users');
+      const msg = error.response?.data?.error || error.message || 'Error fetching users';
+      setError(msg);
     }
   };
 
@@ -204,12 +211,7 @@ const UserManagement = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Email
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Department
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Employee ID
-                </th>
+
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
@@ -227,12 +229,7 @@ const UserManagement = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {user.email}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.department}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {user.employeeId}
-                  </td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                       user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'

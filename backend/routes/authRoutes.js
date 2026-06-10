@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Faculty = require('../models/Course');
 const { auth, adminAuth } = require('../middleware/auth');
 const { getJwtSecret } = require('../utils/jwtSecret');
 
@@ -125,35 +126,43 @@ router.post('/login', async (req, res) => {
 // ==========================================
 router.post('/register', async (req, res) => {
   try {
-    const { userId, name, email, password } = req.body;
+    const { name, email, password } = req.body;
 
-    // Validate required fields
-    if (!userId || !name || !email || !password) {
-      return res.status(400).json({ error: 'All fields are required.' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
 
     const normalizedEmail = email.trim().toLowerCase();
+    const userId = req.body.userId || `FAC-${Date.now()}`;
 
-    // Check for duplicate userId or email to ensure database consistency
     const existingUser = await User.findOne({ 
       $or: [{ userId }, { email: normalizedEmail }] 
     });
     
     if (existingUser) {
-      return res.status(400).json({ error: 'User with this userId or email already exists.' });
+      return res.status(400).json({ error: 'User with this email already exists.' });
     }
 
-    // Create and save new user doc
     const user = new User({
       userId,
       name,
       email: normalizedEmail,
       password,
-      role: 'faculty', // Force safe baseline tier privileges
-      isActive: true   // Ensures immediate middleware validation clearance
+      role: 'faculty',
+      isActive: true,
+      department: req.body.department,
+      employeeId: req.body.employeeId,
+      bankAccount: req.body.bankAccount,
+      ifscCode: req.body.ifscCode
     });
     
     await user.save();
+
+    await Faculty.findOneAndUpdate(
+      { facultyId: userId },
+      { facultyId: userId, name, email: normalizedEmail, department: req.body.department, employeeId: req.body.employeeId },
+      { upsert: true, new: true }
+    );
 
     res.status(201).json({ message: 'Registration successful. You can now log in.' });
   } catch (error) {

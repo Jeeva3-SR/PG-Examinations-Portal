@@ -10,6 +10,8 @@ const menuItems = [
   { path: '/faculty/evaluator-details', label: 'Evaluator Tasks', icon: '🎯' }, 
   { path: '/faculty/release-claim', label: 'Financial Claims', icon: '💸' },      
   { path: '/faculty/update-profile', label: 'Maintain Profile', icon: '📝' },
+  { path: '/faculty/all-faculties', label: 'All Faculties', icon: '👨‍🏫' },
+  { path: '/faculty/all-subjects', label: 'All Subjects', icon: '📖' },
   { path: '/login', label: 'Sign Out Portal', icon: '🚪' },
 ];
 

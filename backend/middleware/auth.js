@@ -23,7 +23,7 @@ const auth = async (req, res, next) => {
     }
 
     // Fetch user and make sure they are active
-    const user = await User.findOne({ _id: decoded.userId, isActive: true });
+    const user = await User.findOne({ _id: decoded.userId, isActive: { $ne: false } });
 
     if (!user) {
       return res.status(401).json({ error: 'User account is inactive or does not exist.' });

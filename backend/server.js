@@ -48,6 +48,7 @@ app.use('/api/coordinator', require('./routes/coordinatorRoutes'));
 app.use('/api/users', require('./routes/usersRoutes'));
 app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
 app.use('/api/subject-assignments', require('./routes/subjectAssignmentRoutes'));
+app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api', require('./routes/authRoutes'));
 
 

@@ -75,6 +75,21 @@
   background: #a8a8a8;
 }
 
+/* Dark sidebar scrollbar — visible against slate-900 background */
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* Base Styles */
 body {
   @apply bg-[#f9f9f9] text-[#1f2937];

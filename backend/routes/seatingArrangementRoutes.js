@@ -179,4 +179,99 @@ router.get('/room-summary', async (req, res) => {
     }
 });
 
+// POST /api/seating-arrangement/generate-from-excel
+router.post('/generate-from-excel', async (req, res) => {
+  const { entryId, rooms } = req.body;
+  if (!entryId || !rooms || !rooms.length) {
+    return res.status(400).json({ error: 'entryId and rooms array are required' });
+  }
+  try {
+    const StudentInput = require('../models/StudentInput');
+    const { getFileBuffer } = require('../utils/s3');
+    const XLSX = require('xlsx');
+
+    const entry = await StudentInput.findById(entryId);
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+
+    const fields = [
+      { status: 'cegRegularStatus', key: 'cegRegularKey', label: 'CEG Regular' },
+      { status: 'cegArrearStatus', key: 'cegArrearKey', label: 'CEG Arrear' },
+      { status: 'mitRegularStatus', key: 'mitRegularKey', label: 'MIT Regular' },
+      { status: 'mitArrearStatus', key: 'mitArrearKey', label: 'MIT Arrear' },
+    ];
+
+    let allStudents = [];
+    for (const f of fields) {
+      if (entry[f.status] !== 'uploaded' || !entry[f.key]) continue;
+      try {
+        const buffer = await getFileBuffer(entryId, f.status);
+        const workbook = XLSX.read(buffer, { type: 'buffer' });
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        const students = data.map(row => {
+          const regNo = row['Register Number'] || row['Reg No'] || row['RegNo'] || row['Reg. No'] || row['Roll Number'] || row['RollNo'] || Object.values(row)[0] || '';
+          const name = row['Name'] || row['Student Name'] || row['StudentName'] || row['Student'] || Object.values(row)[1] || '';
+          return { regNo: String(regNo).trim(), name: String(name).trim(), category: f.label };
+        }).filter(s => s.regNo);
+        allStudents.push(...students);
+      } catch (e) {
+        console.warn(`Skipping field ${f.label}: ${e.message}`);
+      }
+    }
+
+    if (!allStudents.length) {
+      return res.status(404).json({ error: 'No student data found in uploaded files' });
+    }
+
+    let studentIdx = 0;
+    let arrangements = [];
+    for (const room of rooms) {
+      let roomStudents = [];
+      for (let i = 0; i < room.capacity && studentIdx < allStudents.length; i++) {
+        roomStudents.push({ ...allStudents[studentIdx], seatNo: i + 1 });
+        studentIdx++;
+      }
+      if (roomStudents.length > 0) {
+        arrangements.push({ roomName: room.name, students: roomStudents });
+      }
+      if (studentIdx >= allStudents.length) break;
+    }
+
+    // Persist to database — remove old for this entry, then insert
+    await SeatingArrangement.deleteMany({ entryRef: entryId });
+    const dateObj = entry.date instanceof Date ? entry.date : new Date(entry.date);
+    const docs = arrangements.map(r => ({
+      entryRef: entryId,
+      roomNumber: r.roomName,
+      date: dateObj,
+      session: entry.session,
+      courseCode: entry.courseCode,
+      specialization: entry.specialization,
+      students: r.students.map(s => ({
+        studentName: s.name,
+        regNo: s.regNo,
+        courseCode: entry.courseCode,
+        specialization: entry.specialization,
+        category: s.category,
+        seatNo: s.seatNo,
+      })),
+    }));
+    if (docs.length) await SeatingArrangement.insertMany(docs);
+
+    res.json({ arrangements, totalStudents: allStudents.length, roomsUsed: arrangements.length });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to generate seating plan', details: err.message });
+  }
+});
+
+// GET /api/seating-arrangement/by-entry/:entryId
+router.get('/by-entry/:entryId', async (req, res) => {
+  try {
+    const docs = await SeatingArrangement.find({ entryRef: req.params.entryId }).sort({ roomNumber: 1 });
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch seating plan', details: err.message });
+  }
+});
+
 module.exports = router; 

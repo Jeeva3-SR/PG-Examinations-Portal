@@ -35,9 +35,22 @@ const Sidebar = ({ menuItems, theme = 'bg-slate-900 text-slate-300 border-r bord
         />
       )}
 
+      {/* Slider toggle tab — always visible on the left edge */}
+      <button
+        onClick={() => setOpen(!open)}
+        className={`fixed z-50 top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-16 rounded-r-lg bg-slate-800 hover:bg-slate-700 text-slate-300 shadow-lg transition-all duration-300 ease-in-out outline-none ${
+          open ? 'left-72' : 'left-0'
+        }`}
+        title={open ? 'Collapse sidebar' : 'Expand sidebar'}
+      >
+        <svg className={`w-4 h-4 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
       <aside className={`fixed z-50 top-0 left-0 h-full w-72 flex flex-col justify-between transition-transform duration-300 ease-in-out shadow-xl lg:shadow-none ${open ? 'translate-x-0' : '-translate-x-72'} ${theme}`}>
-        <div className="flex flex-col flex-1">
-          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/60">
+        <div className="flex flex-col flex-1 min-h-0">
+          <div className="flex items-center justify-between px-6 py-5 border-b border-slate-800/60 shrink-0">
             <div className="flex items-center space-x-2.5">
               <div className="h-8 w-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md">
                 <span className="font-black text-sm tracking-wider text-white">E</span>
@@ -54,7 +67,7 @@ const Sidebar = ({ menuItems, theme = 'bg-slate-900 text-slate-300 border-r bord
             </button>
           </div>
 
-          <nav className="flex-1 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+          <nav className="flex-1 min-h-0 px-4 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
             {menuItems.map((item) => {
               const isLogout = item.label.toLowerCase().includes('log') || item.label.toLowerCase().includes('sign out');
 

@@ -66,7 +66,19 @@ const studentInputSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Session is required'],
     enum: ['FN', 'AN']
-  }
+  },
+  sessionRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Session'
+  },
+  cegRegularStatus: { type: String, enum: ['pending', 'uploaded', 'skipped'], default: 'pending' },
+  cegArrearStatus: { type: String, enum: ['pending', 'uploaded', 'skipped'], default: 'pending' },
+  mitRegularStatus: { type: String, enum: ['pending', 'uploaded', 'skipped'], default: 'pending' },
+  mitArrearStatus: { type: String, enum: ['pending', 'uploaded', 'skipped'], default: 'pending' },
+  cegRegularKey: { type: String },
+  cegArrearKey: { type: String },
+  mitRegularKey: { type: String },
+  mitArrearKey: { type: String }
 }, {
   timestamps: true
 });

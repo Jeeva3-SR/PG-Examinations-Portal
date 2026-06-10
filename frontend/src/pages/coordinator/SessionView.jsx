@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import TimetableUpload from '../../components/TimetableUpload';
 
 
 const SessionView = () => {
+  const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newSession, setNewSession] = useState({
@@ -18,7 +20,7 @@ const SessionView = () => {
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('http://localhost:5000/api/sessions');
+      const res = await axios.get('/api/sessions');
       setSessions(res.data);
     } catch (err) {
       setSessions([]);
@@ -38,7 +40,7 @@ const SessionView = () => {
 
   const handleAddSession = async () => {
     try {
-      await axios.post('http://localhost:5000/api/sessions', newSession);
+      await axios.post('/api/sessions', newSession);
       alert('Session added successfully!');
       setNewSession({
         date: '',
@@ -57,7 +59,7 @@ const SessionView = () => {
   const handleDeleteSession = async (id) => {
     if (window.confirm('Are you sure you want to delete this session?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/sessions/${id}`);
+        await axios.delete(`/api/sessions/${id}`);
         alert('Session deleted successfully!');
         fetchSessions(); // Refresh data
       } catch (error) {
@@ -195,7 +197,13 @@ const SessionView = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.courseCode}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.courseName}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.specialization}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button
+                              onClick={() => navigate(`/student-input?sessionId=${s._id}&specialization=${encodeURIComponent(s.specialization)}&courseCode=${encodeURIComponent(s.courseCode)}&courseName=${encodeURIComponent(s.courseName)}`)}
+                              className="text-green-600 hover:text-green-900"
+                            >
+                              Enter Students
+                            </button>
                             <button
                               onClick={() => handleDeleteSession(s._id)}
                               className="text-red-600 hover:text-red-900"

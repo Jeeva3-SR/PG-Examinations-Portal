@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 
 const seatingArrangementSchema = new mongoose.Schema({
+  entryRef: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'StudentInput'
+  },
   roomNumber: {
     type: String,
     required: true
@@ -14,9 +18,11 @@ const seatingArrangementSchema = new mongoose.Schema({
     enum: ['FN', 'AN'],
     required: true
   },
+  courseCode: String,
+  specialization: String,
   floor: {
     type: String,
-    required: true
+    default: ''
   },
   students: [
     {
@@ -24,6 +30,7 @@ const seatingArrangementSchema = new mongoose.Schema({
       regNo: String,
       courseCode: String,
       specialization: String,
+      category: String,
       seatNo: Number
     }
   ]
