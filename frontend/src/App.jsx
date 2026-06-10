@@ -39,13 +39,18 @@
   import NotFound from './pages/NotFound'; 
   import CoordinatorLayout from './components/layouts/Coordinator';
   import ApproveQPOrders from './pages/hod/ApproveQPOrders';
+  import ForgotPassword from './pages/ForgotPassword';
+  import ResetPasswordForm from './pages/ResetPasswordForm';
 
   import ProtectedRoute from './components/ProtectedRoute';
 
   const AppContent = () => {
     const location = useLocation();
-    const publicRoutes = ['/', '/login', '/hod/login', '/about'];
-    const isFullWidthPage = publicRoutes.includes(location.pathname) || location.pathname === '/faculty/register';
+    const publicRoutes = ['/', '/login', '/hod/login', '/about', '/forgot-password'];
+    const isFullWidthPage = 
+      publicRoutes.includes(location.pathname) || 
+      location.pathname === '/faculty/register' ||
+      location.pathname.startsWith('/reset-password/');
 
     return (
       <>
@@ -57,6 +62,8 @@
             <Route path="/hod/login" element={<UnifiedLogin />} />
             <Route path="/faculty/register" element={<FacultyRegister />} />
             <Route path="/about" element={<AboutPage />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
             
             {/* ========================================================= */}
             {/* 🛡️ SECURITY LAYER: COORDINATOR REGION */}

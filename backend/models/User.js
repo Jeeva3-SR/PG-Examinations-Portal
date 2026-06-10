@@ -38,7 +38,9 @@ const userSchema = new mongoose.Schema({
   department: { type: String, trim: true },
   employeeId: { type: String, trim: true },
   bankAccount: { type: String, trim: true },
-  ifscCode: { type: String, trim: true }
+  ifscCode: { type: String, trim: true },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date }
 }, {
   timestamps: true
 });

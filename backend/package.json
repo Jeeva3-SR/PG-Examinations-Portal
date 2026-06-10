@@ -22,6 +22,7 @@
     "moment": "^2.30.1",
     "mongoose": "^8.15.1",
     "multer": "^2.0.1",
+    "nodemailer": "^8.0.10",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "xlsx": "^0.18.5"

@@ -172,6 +172,9 @@ const UnifiedLogin = () => {
                   <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-slate-600">
                     Password
                   </label>
+                  <Link to="/forgot-password" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors duration-200">
+                    Forgot Password?
+                  </Link>
                 </div>
                 <input
                   id="password"

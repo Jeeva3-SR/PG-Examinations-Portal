@@ -270,4 +270,83 @@ router.patch('/users/:id/status', adminAuth, async (req, res) => {
   }
 });
 
+// ==========================================
+// 8. FORGOT PASSWORD (🛡️ Unified for all roles)
+// ==========================================
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
+    if (!user) {
+      // Return 200 for security, preventing account enumeration
+      return res.json({ message: 'If that email exists, a password reset link has been generated.' });
+    }
+
+    // Generate secure random token
+    const crypto = require('crypto');
+    const resetToken = crypto.randomBytes(32).toString('hex');
+
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+
+    await user.save();
+
+    // Reset Link URL (forces port 3000 for frontend dev server)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+    const sendEmail = require('../utils/email');
+    await sendEmail({
+      email: user.email,
+      subject: 'PG Exam Portal - Password Reset',
+      message: `Hello ${user.name},\n\nYou requested a password reset. Please click on the link below (or copy and paste it into your browser) to reset your password:\n\n${resetUrl}\n\nThis link is valid for 1 hour. If you did not make this request, you can safely ignore this email.\n\nBest regards,\nPG Exam Portal Team`
+    });
+
+    res.json({ message: 'If that email exists, a password reset link has been generated.' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// ==========================================
+// 9. RESET PASSWORD (🛡️ Unified for all roles)
+// ==========================================
+router.post('/reset-password/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ error: 'New password is required' });
+    }
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
+    }
+
+    // Update password (pre-save hook will hash it)
+    user.password = password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+
+    await user.save();
+
+    res.json({ message: 'Password reset successful. You can now log in with your new password.' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 module.exports = router;
