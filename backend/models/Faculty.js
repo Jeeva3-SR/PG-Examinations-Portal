@@ -1,35 +1,34 @@
 const mongoose = require('mongoose');
 
-const facultySchema = new mongoose.Schema({
-  facultyId: { type: String, required: true, unique: true },
-  employeeId: { type: String },
-  name: { type: String, required: true },
-  email: { type: String, required: true },
-  course: { type: [String], default: [] },
-  courseCode: { type: String },
-  position: { type: String },
-  contactInfo: {
-    email: { type: String },
-    phone: { type: String }
+const courseSchema = new mongoose.Schema({
+  courseCode: {
+    type: String,
+    required: true,
+    unique: true,
+    trim: true
   },
-  areasOfExpertise: { type: [String], default: [] },
-  classesHandled: [{
-    subject: { type: String },
-    semester: { type: String },
-    section: { type: String },
-    year: { type: String }
-  }],
-  dob: { type: Date },
-  dateOfJoining: { type: Date },
-  department: { type: String },
-  gender: { type: String },
-  profilePicUrl: { type: String },
-  isActive: { type: Boolean, default: true },
-  scaleOfPay: { type: String },
-  presentPay: { type: Number },
-  natureOfAppointment: { type: String }
-}, { timestamps: true });
+  courseName: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  studentCount: {
+    type: Number,
+    required: true,
+    min: 0
+  },
+  type: {
+    type: String,
+    enum: ['Regular', 'Arrear'],
+    required: true
+  },
+  college: {
+    type: String,
+    enum: ['CEG', 'MIT'],
+    required: true
+  }
+}, {
+  timestamps: true
+});
 
-const Faculty = mongoose.model('Faculty', facultySchema);
-
-module.exports = Faculty; 
+module.exports = mongoose.model('Course', courseSchema);

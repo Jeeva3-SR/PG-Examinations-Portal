@@ -1,12 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const Course = require('../models/Course');
+const Course = require('../models/Faculty');
+
+const defaultCourses = [
+  { courseCode: 'CP3351', courseName: 'Data Warehousing and Mining', studentCount: 50, type: 'Regular', college: 'CEG' },
+  { courseCode: 'CP3061', courseName: 'Design Patterns', studentCount: 50, type: 'Regular', college: 'CEG' },
+  { courseCode: 'OR3003', courseName: 'PERT/CPM', studentCount: 50, type: 'Regular', college: 'CEG' },
+  { courseCode: 'OR3005', courseName: 'Supply Chain Management', studentCount: 50, type: 'Regular', college: 'CEG' },
+  { courseCode: 'CP3064', courseName: 'Formal Specification Techniques', studentCount: 50, type: 'Regular', college: 'CEG' },
+  { courseCode: 'CP3079', courseName: 'UI/UX Design', studentCount: 50, type: 'Regular', college: 'CEG' },
+  { courseCode: 'CS23601', courseName: 'Machine Learning', studentCount: 50, type: 'Regular', college: 'CEG' }
+];
+
+const ensureDefaultCourses = async () => {
+  const count = await Course.countDocuments();
+  if (count > 0) return;
+
+  await Course.insertMany(defaultCourses, { ordered: false }).catch(() => {});
+};
 
 // Get all courses
 router.get('/', async (req, res) => {
   try {
+    await ensureDefaultCourses();
     const courses = await Course.find().sort({ courseCode: 1 });
-    console.log(courses);
     res.json(courses);
   } catch (error) {
     res.status(500).json({ message: error.message });

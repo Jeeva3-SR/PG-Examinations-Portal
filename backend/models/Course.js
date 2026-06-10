@@ -1,34 +1,75 @@
 const mongoose = require('mongoose');
 
-const courseSchema = new mongoose.Schema({
-  courseCode: {
+const facultySchema = new mongoose.Schema({
+  facultyId: {
     type: String,
     required: true,
-    unique: true,
-    trim: true
+    unique: true
   },
-  courseName: {
+
+  employeeId: String,
+
+  name: {
     type: String,
-    required: true,
-    trim: true
-  },
-  studentCount: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  type: {
-    type: String,
-    enum: ['Regular', 'Arrear'],
     required: true
   },
-  college: {
+
+  email: {
     type: String,
-    enum: ['CEG', 'MIT'],
     required: true
-  }
+  },
+
+  // Reference multiple courses
+  courses: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Course'
+  }],
+
+  position: String,
+
+  contactInfo: {
+    email: String,
+    phone: String
+  },
+
+  areasOfExpertise: {
+    type: [String],
+    default: []
+  },
+
+  classesHandled: [{
+    course: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Course'
+    },
+    semester: String,
+    section: String,
+    year: String
+  }],
+
+  dob: Date,
+
+  dateOfJoining: Date,
+
+  department: String,
+
+  gender: String,
+
+  profilePicUrl: String,
+
+  isActive: {
+    type: Boolean,
+    default: true
+  },
+
+  scaleOfPay: String,
+
+  presentPay: Number,
+
+  natureOfAppointment: String
+
 }, {
   timestamps: true
 });
 
-module.exports = mongoose.model('Course', courseSchema); 
+module.exports = mongoose.model('Faculty', facultySchema);

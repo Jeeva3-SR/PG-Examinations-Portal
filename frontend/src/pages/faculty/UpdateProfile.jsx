@@ -6,12 +6,18 @@ const defaultProfile = {
   employeeId: '',
   name: '',
   email: '',
-  course: '',
-  courseCode: '',
+  courses: [],
   position: '',
   contactInfo: { email: '', phone: '' },
   areasOfExpertise: [''],
-  classesHandled: [{ subject: '', semester: '', section: '', year: '' }],
+  classesHandled: [
+    {
+      course: '',
+      semester: '',
+      section: '',
+      year: ''
+    }
+  ],
   dob: '',
   dateOfJoining: '',
   department: '',
@@ -23,30 +29,109 @@ const defaultProfile = {
   natureOfAppointment: ''
 };
 
+const formatDateValue = (value) => {
+  if (!value) return '';
+  return typeof value === 'string'
+    ? value.substring(0, 10)
+    : new Date(value).toISOString().substring(0, 10);
+};
+
+const toCourseId = (course) => {
+  if (!course) return '';
+  return String(typeof course === 'object' ? course._id : course);
+};
+
+const normalizeProfile = (data = {}, allCourses = []) => {
+  const validCourseIds = new Set(allCourses.map(course => String(course._id)));
+  let courses = data.courses?.map(toCourseId).filter(Boolean) || [];
+
+  if (validCourseIds.size > 0) {
+    courses = courses.filter(courseId => validCourseIds.has(String(courseId)));
+  }
+
+  return {
+    ...defaultProfile,
+    ...data,
+    contactInfo: {
+      ...defaultProfile.contactInfo,
+      ...(data.contactInfo || {})
+    },
+    courses,
+    areasOfExpertise:
+      data.areasOfExpertise?.length ? data.areasOfExpertise : [''],
+    classesHandled:
+      data.classesHandled?.length
+        ? data.classesHandled.map(cls => ({
+            course: toCourseId(cls.course?._id || cls.course),
+            semester: cls.semester || '',
+            section: cls.section || '',
+            year: cls.year || ''
+          }))
+        : defaultProfile.classesHandled,
+    dob: formatDateValue(data.dob),
+    dateOfJoining: formatDateValue(data.dateOfJoining)
+  };
+};
+
+const buildSubmitPayload = (profile) => {
+  const {
+    _id,
+    __v,
+    createdAt,
+    updatedAt,
+    ...rest
+  } = profile;
+
+  return {
+    ...rest,
+    areasOfExpertise: rest.areasOfExpertise.filter(area => area && area.trim()),
+    classesHandled: rest.classesHandled.filter(
+      cls => cls.course || cls.semester || cls.section || cls.year
+    ),
+    presentPay:
+      rest.presentPay === '' || rest.presentPay == null
+        ? undefined
+        : Number(rest.presentPay)
+  };
+};
+
 const UpdateProfile = () => {
   const [profile, setProfile] = useState(defaultProfile);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
   const [fetching, setFetching] = useState(true);
+  const [allCourses, setAllCourses] = useState([]);
 
   useEffect(() => {
     const loggedInFaculty = localStorage.getItem('loggedInFaculty');
     if (loggedInFaculty) {
       const faculty = JSON.parse(loggedInFaculty);
       if (faculty.facultyId) {
-        axios.get(`/api/faculty/${faculty.facultyId}`)
-          .then(res => {
-            setProfile({ ...defaultProfile, ...res.data });
+        Promise.all([
+          axios.get(`/api/faculty/${faculty.facultyId}`),
+          axios.get('/api/courses')
+        ])
+          .then(([facultyRes, coursesRes]) => {
+            setAllCourses(coursesRes.data);
+            setProfile(normalizeProfile(facultyRes.data, coursesRes.data));
             setFetching(false);
           })
           .catch(() => {
-            setProfile(prev => ({ ...prev, ...faculty }));
-            setFetching(false);
+            axios.get('/api/courses')
+              .then(coursesRes => {
+                setAllCourses(coursesRes.data);
+                setProfile(normalizeProfile(faculty, coursesRes.data));
+              })
+              .finally(() => setFetching(false));
           });
       } else {
-        setProfile(prev => ({ ...prev, ...faculty }));
-        setFetching(false);
+        axios.get('/api/courses')
+          .then(coursesRes => {
+            setAllCourses(coursesRes.data);
+            setProfile(normalizeProfile(faculty, coursesRes.data));
+          })
+          .finally(() => setFetching(false));
       }
     } else {
       setFetching(false);
@@ -80,7 +165,19 @@ const UpdateProfile = () => {
     setProfile({ ...profile, classesHandled: arr });
   };
   
-  const addClass = () => setProfile({ ...profile, classesHandled: [...profile.classesHandled, { subject: '', semester: '', section: '', year: '' }] });
+  const addClass = () =>
+  setProfile({
+    ...profile,
+    classesHandled: [
+      ...profile.classesHandled,
+      {
+        course: '',
+        semester: '',
+        section: '',
+        year: ''
+      }
+    ]
+  });
   const removeClass = (idx) => setProfile({ ...profile, classesHandled: profile.classesHandled.filter((_, i) => i !== idx) });
 
   const handleSubmit = async (e) => {
@@ -89,11 +186,28 @@ const UpdateProfile = () => {
     setError('');
     setSuccess('');
     try {
-      await axios.post('/api/faculty/update-profile', profile);
+      const payload = buildSubmitPayload(profile);
+      const res = await axios.post('/api/faculty/update-profile', payload);
+      const updatedProfile = normalizeProfile(
+        res.data.faculty || payload,
+        allCourses
+      );
+
+      setProfile(updatedProfile);
+      localStorage.setItem(
+        'loggedInFaculty',
+        JSON.stringify({
+          ...JSON.parse(localStorage.getItem('loggedInFaculty') || '{}'),
+          ...updatedProfile
+        })
+      );
       setSuccess('Profile records updated successfully!');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
-      setError('Failed to update system profile. Please verify structural logs.');
+      setError(
+        err.response?.data?.message ||
+          'Failed to update system profile. Please verify structural logs.'
+      );
     } finally {
       setLoading(false);
     }
@@ -162,7 +276,11 @@ const UpdateProfile = () => {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+        <form
+    noValidate
+    onSubmit={handleSubmit}
+    className="space-y-8"
+        >
         
         {/* CARD SECTION 1: Core System Identifiers */}
         <div className={cardStyle}>
@@ -220,11 +338,11 @@ const UpdateProfile = () => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-2">
             <div>
               <label className={labelStyle}>Date of Birth</label>
-              <input name="dob" type="date" value={profile.dob ? profile.dob.substring(0, 10) : ''} onChange={handleChange} className={inputStyle} />
+              <input name="dob" type="date" value={profile.dob} onChange={handleChange} className={inputStyle} />
             </div>
             <div>
               <label className={labelStyle}>Date of Joining</label>
-              <input name="dateOfJoining" type="date" value={profile.dateOfJoining ? profile.dateOfJoining.substring(0, 10) : ''} onChange={handleChange} className={inputStyle} />
+              <input name="dateOfJoining" type="date" value={profile.dateOfJoining} onChange={handleChange} className={inputStyle} />
             </div>
             <div>
               <label className={labelStyle}>Gender Classification</label>
@@ -276,12 +394,32 @@ const UpdateProfile = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
               <label className={labelStyle}>Assigned Core Course Title(s)</label>
-              <input name="course" value={profile.course} onChange={handleChange} className={inputStyle} placeholder="Advanced Operating Systems" />
-            </div>
-            <div>
-              <label className={labelStyle}>Core Course Code Mapping</label>
-              <input name="courseCode" value={profile.courseCode} onChange={handleChange} className={inputStyle} placeholder="CS-2026-AOS" />
-            </div>
+                <select
+                multiple
+                className={inputStyle}
+                value={(profile.courses || []).map(String)}
+                onChange={(e) => {
+                  const values = Array.from(
+                    e.target.selectedOptions,
+                    option => option.value
+                  );
+
+                  setProfile({
+                    ...profile,
+                    courses: values
+                  });
+                }}
+              >
+                {allCourses.map(course => (
+                  <option
+                    key={course._id}
+                    value={String(course._id)}
+                  >
+                    {course.courseCode} - {course.courseName}
+                  </option>
+                ))}
+              </select>
+            </div> 
           </div>
 
           {/* Sub block: Areas of Expertise */}
@@ -318,7 +456,28 @@ const UpdateProfile = () => {
               {profile.classesHandled.map((cls, idx) => (
                 <div key={idx} className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-slate-50/50 border border-slate-200/60 p-4 rounded-xl relative group">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-grow">
-                    <input placeholder="Subject" value={cls.subject} onChange={e => handleClassChange(idx, 'subject', e.target.value)} className={`${inputStyle} py-2 text-xs`} />
+                    <select
+                      value={String(cls.course || '')}
+                      onChange={(e) =>
+                        handleClassChange(
+                          idx,
+                          'course',
+                          e.target.value
+                        )
+                      }
+                      className={`${inputStyle} py-2 text-xs`}
+                    >
+                      <option value="">Select Course</option>
+
+                      {allCourses.map(course => (
+                        <option
+                          key={course._id}
+                          value={String(course._id)}
+                        >
+                          {course.courseCode} - {course.courseName}
+                        </option>
+                      ))}
+                    </select>
                     <input placeholder="Semester" value={cls.semester} onChange={e => handleClassChange(idx, 'semester', e.target.value)} className={`${inputStyle} py-2 text-xs`} />
                     <input placeholder="Section" value={cls.section} onChange={e => handleClassChange(idx, 'section', e.target.value)} className={`${inputStyle} py-2 text-xs`} />
                     <input placeholder="Year" value={cls.year} onChange={e => handleClassChange(idx, 'year', e.target.value)} className={`${inputStyle} py-2 text-xs`} />

@@ -3,6 +3,7 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { auth, adminAuth } = require('../middleware/auth');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 // ==========================================
 // 1. SETUP INITIAL ADMIN (Public setup)
@@ -93,7 +94,7 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(
       { userId: user._id },
-      process.env.JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '1h' }
     );
 

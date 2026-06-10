@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { getJwtSecret } = require('../utils/jwtSecret');
 
 // Base Authentication Middleware
 const auth = async (req, res, next) => {
@@ -13,7 +14,7 @@ const auth = async (req, res, next) => {
     // Verify JWT and catch specific expiration errors
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
+      decoded = jwt.verify(token, getJwtSecret());
     } catch (jwtError) {
       if (jwtError.name === 'TokenExpiredError') {
         return res.status(401).json({ error: 'Token expired. Please log in again.' });

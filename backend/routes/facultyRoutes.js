@@ -1,7 +1,64 @@
 const express = require('express');
 const router = express.Router();
-const Faculty = require('../models/Faculty');
+const Faculty = require('../models/Course');
+const Course = require('../models/Faculty');
 const Duty = require('../models/Duty');
+
+const toIdString = (value) => {
+  if (!value) return '';
+  return String(value._id || value);
+};
+
+const resolveCourseReference = async (ref) => {
+  const id = toIdString(ref);
+  if (!id) return '';
+
+  const course = await Course.findById(id).lean();
+  if (course) return course._id;
+
+  const legacyFaculty = await Faculty.findById(id).lean();
+  if (legacyFaculty?.courseCode) {
+    const matchedCourse = await Course.findOne({ courseCode: legacyFaculty.courseCode }).lean();
+    if (matchedCourse) return matchedCourse._id;
+  }
+
+  return '';
+};
+
+const resolveCourseReferences = async (refs = []) => {
+  const resolved = [];
+
+  for (const ref of refs) {
+    const courseId = await resolveCourseReference(ref);
+    const courseIdString = toIdString(courseId);
+    if (courseIdString && !resolved.includes(courseIdString)) {
+      resolved.push(courseIdString);
+    }
+  }
+
+  return resolved;
+};
+
+const buildProfileResponse = async (facultyDoc) => {
+  const faculty = facultyDoc?.toObject ? facultyDoc.toObject() : facultyDoc;
+  const resolvedCourses = await resolveCourseReferences(faculty.courses || []);
+  const resolvedClasses = [];
+
+  for (const cls of faculty.classesHandled || []) {
+    resolvedClasses.push({
+      semester: cls.semester || '',
+      section: cls.section || '',
+      year: cls.year || '',
+      course: toIdString(await resolveCourseReference(cls.course))
+    });
+  }
+
+  return {
+    ...faculty,
+    courses: resolvedCourses,
+    classesHandled: resolvedClasses.length ? resolvedClasses : faculty.classesHandled || []
+  };
+};
 
 // Get all faculty members or a random sample
 router.get('/', async (req, res) => {
@@ -48,14 +105,58 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Upsert (create or update) faculty profile by facultyId
+router.post('/update-profile', async (req, res) => {
+  try {
+    const { facultyId, _id, __v, createdAt, updatedAt, ...rest } = req.body;
+
+    if (!facultyId) {
+      return res.status(400).json({ message: 'facultyId is required' });
+    }
+
+    rest.courses = rest.courses || [];
+    rest.classesHandled =
+      rest.classesHandled?.map(cls => ({
+        course: cls.course,
+        semester: cls.semester,
+        section: cls.section,
+        year: cls.year
+      })) || [];
+    rest.areasOfExpertise =
+      rest.areasOfExpertise?.filter(area => area && area.trim()) || [];
+
+    if (rest.presentPay === '' || rest.presentPay == null) {
+      delete rest.presentPay;
+    } else {
+      rest.presentPay = Number(rest.presentPay);
+    }
+
+    const updated = await Faculty.findOneAndUpdate(
+      { facultyId },
+      { $set: { facultyId, ...rest } },
+      { upsert: true, new: true, runValidators: true }
+    );
+
+    const profile = await buildProfileResponse(updated);
+    res.json({ message: 'Profile updated successfully', faculty: profile });
+  } catch (error) {
+    console.log('Error in upsert faculty profile:', error);
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Get faculty by ID
 router.get('/:facultyId', async (req, res) => {
   try {
-    const faculty = await Faculty.findOne({ facultyId: req.params.facultyId });
+    const faculty = await Faculty.findOne({
+      facultyId: req.params.facultyId
+    }).lean();
+
     if (!faculty) {
-      return res.status(404).json({ error: 'Invalid Faculty ID' });
+      return res.status(404).json({ message: 'Faculty member not found' });
     }
-    res.json(faculty);
+
+    res.json(await buildProfileResponse(faculty));
   } catch (err) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -109,24 +210,6 @@ router.put('/:facultyId', async (req, res) => {
     Object.assign(faculty, req.body);
     const updatedFaculty = await faculty.save();
     res.json(updatedFaculty);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-});
-
-// Upsert (create or update) faculty profile by facultyId
-router.post('/update-profile', async (req, res) => {
-  try {
-    const { facultyId, ...rest } = req.body;
-    if (!facultyId) {
-      return res.status(400).json({ message: 'facultyId is required' });
-    }
-    const updated = await Faculty.findOneAndUpdate(
-      { facultyId },
-      { $set: { facultyId, ...rest } },
-      { upsert: true, new: true }
-    );
-    res.json({ message: 'Profile updated successfully', faculty: updated });
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
