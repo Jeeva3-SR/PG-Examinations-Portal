@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
 const AdvanceClaimLetter = () => {
   const [loading, setLoading] = useState(false);
@@ -19,7 +19,7 @@ const AdvanceClaimLetter = () => {
     setToast('');
     setCurrentLetterId(null);
     try {
-      const res = await axios.get('/api/letters/advance-requisition/forwarded');
+      const res = await api.get('/api/letters/advance-requisition/forwarded');
       setLetterData(res.data);
       setCurrentLetterId(res.data._id); // Store the ID
       setSuccess('');
@@ -45,7 +45,7 @@ const AdvanceClaimLetter = () => {
     setToast('');
     setError('');
     try {
-      await axios.put(`/api/letters/advance-requisition/${currentLetterId}/approve`);
+      await api.put(`/api/letters/advance-requisition/${currentLetterId}/approve`);
       setToast('Letter approved successfully!');
       setLetterViewed(false);
       setLetterData(null);
@@ -65,7 +65,7 @@ const AdvanceClaimLetter = () => {
     setToast('');
     setError('');
     try {
-      await axios.put(`/api/letters/advance-requisition/${currentLetterId}/reject`);
+      await api.put(`/api/letters/advance-requisition/${currentLetterId}/reject`);
       setToast('Letter rejected.');
       setLetterViewed(false);
       setLetterData(null);

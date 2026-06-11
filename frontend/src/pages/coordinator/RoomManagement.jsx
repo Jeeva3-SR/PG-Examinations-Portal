@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 import { motion } from 'framer-motion';
 
 const RoomManagement = () => {
@@ -10,17 +11,9 @@ const RoomManagement = () => {
 
   useEffect(() => { fetchRooms(); }, []);
 
-  const getToken = () => {
-    const token = localStorage.getItem('token');
-    if (!token) { setError('No auth token found. Please log in again.'); return null; }
-    return token;
-  };
-
   const fetchRooms = async () => {
-    const token = getToken();
-    if (!token) return;
     try {
-      const res = await axios.get('/api/rooms', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/api/rooms');
       setRooms(res.data);
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || 'Failed to load rooms');
@@ -34,13 +27,11 @@ const RoomManagement = () => {
       setError('All fields are required');
       return;
     }
-    const token = getToken();
-    if (!token) return;
     try {
       if (editingId) {
-        await axios.put(`/api/rooms/${editingId}`, form, { headers: { Authorization: `Bearer ${token}` } });
+        await api.put(`/api/rooms/${editingId}`, form);
       } else {
-        await axios.post('/api/rooms', form, { headers: { Authorization: `Bearer ${token}` } });
+        await api.post('/api/rooms', form);
       }
       setForm({ roomNumber: '', capacity: '', floor: '' });
       setEditingId(null);
@@ -56,10 +47,8 @@ const RoomManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    const token = getToken();
-    if (!token) return;
     try {
-      await axios.delete(`/api/rooms/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/api/rooms/${id}`);
       fetchRooms();
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || 'Failed to delete room');

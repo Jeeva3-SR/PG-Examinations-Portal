@@ -1,23 +1,11 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/useAuthStore';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
-  const [hodName, setHodName] = useState('Department Head');
-  const [deptName, setDeptName] = useState('Academic Division');
-
-  useEffect(() => {
-    const loggedInUser = localStorage.getItem('loggedInHOD') || localStorage.getItem('loggedInFaculty');
-    if (loggedInUser) {
-      try {
-        const data = JSON.parse(loggedInUser);
-        if (data.name) setHodName(data.name);
-        if (data.department) setDeptName(data.department);
-      } catch (e) {
-        console.error("Failed to parse cached HOD session profile configuration", e);
-      }
-    }
-  }, []);
+  const user = useAuthStore((s) => s.user);
+  const hodName = user?.name || 'Department Head';
+  const deptName = user?.department || 'Academic Division';
 
   const quickActions = [
     { title: "Approve QP Order Letters", desc: "Review, sign off on, and dispatch official question paper compilation requests to assigned faculty panels.", icon: "📋", path: "/hod/approve-qporders" },
@@ -36,8 +24,6 @@ const HODDashboard = () => {
   ];
 
   return (
-    // FIXED: Removed all duplicate <Sidebar> tags and local <Outlet /> loops! 
-    // This file now returns only pure workspace content elements.
     <div className="space-y-8 animate-fadeIn text-left">
       
       {/* Premium HOD Welcome Banner */}

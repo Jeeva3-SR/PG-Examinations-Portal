@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 
@@ -24,7 +24,7 @@ const InvigilationDuty = () => {
 
   const fetchSessions = async () => {
     try {
-      const response = await axios.get('/api/sessions');
+      const response = await api.get('/api/sessions');
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -33,7 +33,7 @@ const InvigilationDuty = () => {
 
   const fetchDuties = async () => {
     try {
-      const response = await axios.get(
+      const response = await api.get(
         `/api/duties/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
       );
       setDuties(response.data);
@@ -58,7 +58,7 @@ const InvigilationDuty = () => {
     if (!selectedSession) return;
 
     try {
-      await axios.post(`/api/duties/generate/${selectedSession}`);
+      await api.post(`/api/duties/generate/${selectedSession}`);
       fetchDuties();
     } catch (error) {
       console.error('Error generating duties:', error);
@@ -67,7 +67,7 @@ const InvigilationDuty = () => {
 
   const handleStatusChange = async (dutyId, newStatus) => {
     try {
-      await axios.patch(`/api/duties/${dutyId}`, {
+      await api.patch(`/api/duties/${dutyId}`, {
         status: newStatus,
       });
       fetchDuties();

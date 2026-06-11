@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { motion } from 'framer-motion';
 
 
@@ -25,9 +25,9 @@ const AssignQPSetter = () => {
     const fetchData = async () => {
       try {
         const [coursesRes, facultyRes, qpRes] = await Promise.all([
-          axios.get('/api/courses'),
-          axios.get('/api/faculty'),
-          axios.get('/api/qporders'),
+          api.get('/api/courses'),
+          api.get('/api/faculty'),
+          api.get('/api/qporders'),
         ]);
         setCourses(coursesRes.data);
         setAllFaculty(facultyRes.data);
@@ -58,7 +58,7 @@ const AssignQPSetter = () => {
 
     try {
       const selectedFacultyData = faculty.find(f => f.facultyId === selectedFaculty);
-      await axios.post('/api/assigned-qpsetters', {
+      await api.post('/api/assigned-qpsetters', {
         subject: selectedSubject,
         facultyId: selectedFacultyData.facultyId,
         facultyName: selectedFacultyData.name
@@ -96,7 +96,7 @@ const AssignQPSetter = () => {
     try {
       setError('');
       setSuccess('');
-      await axios.post('/api/qporders/generate', {
+      await api.post('/api/qporders/generate', {
         facultyId: row.facultyId,
         courseCode: row.courseCode,
         courseName: row.courseName,

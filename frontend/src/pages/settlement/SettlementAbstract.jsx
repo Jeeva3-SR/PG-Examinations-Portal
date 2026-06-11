@@ -2,7 +2,7 @@
 // It provides settlement values to all other pages via SettlementProvider (React Context).
 // NOTE: When generating the full PDF, ensure all settlement pages are rendered within the same parent (or route) so SettlementProvider context is shared.
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { useSettlement } from './SettlementContext';
 import { usePdfMode } from '../PdfModeContext';
 
@@ -33,15 +33,13 @@ const SettlementAbstract = () => {
       setError('');
       try {
         // Fetch only the non-manual data
-        const advanceRes = await axios.get('/api/claims/advance');
+        const advanceRes = await api.get('/api/claims/advance');
         setAdvanceClaim(advanceRes.data.totalAmount || 0);
-        // Fetch session count from backend
-        const sessionRes = await axios.get('/api/sessions/count');
+        const sessionRes = await api.get('/api/sessions/count');
         if (!sessionCountFetched) {
           setManualSessionCount(sessionRes.data.sessionCount || 0);
         }
-        // Fetch coordinator name and designation
-        const coordinatorRes = await axios.get('/api/coordinator');
+        const coordinatorRes = await api.get('/api/coordinator');
         setCoordinatorName(coordinatorRes.data.name || '');
         setCoordinatorDesignation(coordinatorRes.data.designation || '');
       } catch (err) {

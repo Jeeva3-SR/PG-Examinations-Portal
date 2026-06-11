@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSettlement } from './SettlementContext';
 import { usePdfMode } from '../PdfModeContext';
-import axios from 'axios';
+import api from '../../lib/api';
 
 // Helper to convert number to words (simple version for demo)
 function numberToWords(num) {
@@ -33,7 +33,7 @@ const SettlementMiscellaneousReceipt = () => {
   useEffect(() => {
     const fetchSessionCount = async () => {
       try {
-        const sessionRes = await axios.get('/api/sessions/count');
+        const sessionRes = await api.get('/api/sessions/count');
         if (!sessionCountFetched) {
           setManualSessionCount(sessionRes.data.sessionCount || 0);
         }

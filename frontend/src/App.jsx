@@ -1,5 +1,6 @@
-  import React from 'react';
+  import React, { useEffect } from 'react';
   import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+  import useAuthStore from './store/useAuthStore';
 
   import Dashboard from './pages/coordinator/Dashboard';
   import UserManagement from './pages/coordinator/UserManagement';
@@ -16,7 +17,7 @@
   import StudentInput from './pages/coordinator/StudentInput';
   import Claims from './pages/coordinator/Claims';
   import SeatingArrangement from './pages/coordinator/SeatingArrangement';
-  import AssignQPSetterTopLevel from './pages/coordinator/assign-qpsetter';
+  import AssignQPSetterTopLevel from './pages/coordinator/AssignQPSetter';
   import DutyAssignment from './pages/coordinator/DutyAssignment';
   import SeatingPlan from './pages/coordinator/SeatingPlan';
   import RoomManagement from './pages/coordinator/RoomManagement';
@@ -30,7 +31,7 @@
   import Letters from './pages/hod/FinalReports';
   import SignOff from './pages/hod/SignOff';
   import FacultyLayout from './components/layouts/Faculty';
-  import HODLayout from './components/layouts/hod';
+  import HODLayout from './components/layouts/HOD';
   import HODDashboard from './pages/hod/HODDashboard';
 
   import SettlementAllPages from './pages/settlement/SettlementAllPages';
@@ -50,6 +51,10 @@
 
   const AppContent = () => {
     const location = useLocation();
+    const hydrate = useAuthStore((s) => s.hydrate);
+
+    useEffect(() => { hydrate(); }, [hydrate]);
+
     const publicRoutes = ['/', '/login', '/hod/login', '/about', '/forgot-password'];
     const isFullWidthPage = 
       publicRoutes.includes(location.pathname) || 
@@ -69,9 +74,6 @@
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password/:token" element={<ResetPasswordForm />} />
             
-            {/* ========================================================= */}
-            {/* 🛡️ SECURITY LAYER: COORDINATOR REGION */}
-            {/* ========================================================= */}
             <Route element={<ProtectedRoute allowedRoles={['Coordinator']} />}>
               <Route element={<CoordinatorLayout />}>
                 <Route path="/dashboard" element={<Dashboard />} />
@@ -93,16 +95,11 @@
               </Route>
             </Route>
 
-            {/* ========================================================= */}
-            {/* 🛡️ SECURITY LAYER: HEAD OF DEPARTMENT (HOD) REGION */}
-            {/* ========================================================= */}
             <Route element={<ProtectedRoute allowedRoles={['HOD']} />}>
-              {/* ⚡ FIX: Added structural wildcard layer context to ensure accurate root layout resolution checks */}
               <Route path="/hod/*" element={<HODLayout />}>
                 <Route index element={<HODDashboard />} />
                 <Route path="dashboard" element={<HODDashboard />} />
                 <Route path="consolidated-sessions" element={<ConsolidatedSessions />} />
-                {/* ⚡ FIX: Resolves the 'hod/dashboard/assign-qpsetter' stack loop explicitly */}
                 <Route path="approve-qporders" element={<ApproveQPOrders />} />
                 <Route path="letters" element={<Letters />} />
                 <Route path="signoff" element={<SignOff />} />
@@ -112,9 +109,6 @@
               </Route>
             </Route>
 
-            {/* ========================================================= */}
-            {/* 🛡️ SECURITY LAYER: FACULTY PORTAL TERMINALS */}
-            {/* ========================================================= */}
             <Route element={<ProtectedRoute allowedRoles={['Faculty']} />}>
               <Route path="/faculty/*" element={<FacultyLayout />}>
                 <Route index element={<FacultyDashboard />} />
@@ -129,7 +123,6 @@
               </Route>
             </Route>
 
-            {/* Universal Catch-All 404 Route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>

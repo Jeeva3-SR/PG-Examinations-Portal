@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
 const TimetableUpload = ({ onUploadSuccess }) => {
   const [file, setFile] = useState(null);
@@ -46,7 +46,7 @@ const TimetableUpload = ({ onUploadSuccess }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post('/api/sessions/upload', formData, {
+      const response = await api.post('/api/sessions/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000, // 30 second timeout
       });

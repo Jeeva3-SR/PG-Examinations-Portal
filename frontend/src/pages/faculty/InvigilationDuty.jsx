@@ -1,34 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 
 const InvigilationDuty = () => {
+  const user = useAuthStore((s) => s.user);
   const [duties, setDuties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [statusMap, setStatusMap] = useState({}); // { dutyId: 'completed' | 'not completed' }
-  const [statusLoading, setStatusLoading] = useState({}); // { dutyId: true/false }
+  const [statusMap, setStatusMap] = useState({});
+  const [statusLoading, setStatusLoading] = useState({});
 
   useEffect(() => {
     const fetchDutiesAndStatus = async () => {
       try {
-        const loggedInFaculty = localStorage.getItem('loggedInFaculty');
-        let facultyId = null;
-        if (loggedInFaculty) {
-          try {
-            facultyId = JSON.parse(loggedInFaculty).facultyId;
-          } catch {}
-        }
+        const facultyId = user?.facultyId;
         if (!facultyId) {
           setError('Faculty ID not found. Please log in again.');
           setLoading(false);
           return;
         }
         const [dutiesRes, statusRes] = await Promise.all([
-          axios.get(`/api/duties/faculty/${facultyId}`),
-          axios.get(`/api/duties/completed-duties?facultyId=${facultyId}`)
+          api.get(`/api/duties/faculty/${facultyId}`),
+          api.get(`/api/duties/completed-duties?facultyId=${facultyId}`)
         ]);
         setDuties(dutiesRes.data);
-        // Build status map
         const map = {};
         statusRes.data.forEach(record => {
           map[record.dutyId] = record.status;
@@ -42,23 +37,15 @@ const InvigilationDuty = () => {
       }
     };
     fetchDutiesAndStatus();
-  }, []);
+  }, [user]);
 
   const handleStatus = async (dutyId, status) => {
-    const loggedInFaculty = localStorage.getItem('loggedInFaculty');
-    let facultyId = null;
-    let facultyName = '';
-    if (loggedInFaculty) {
-      try {
-        const parsed = JSON.parse(loggedInFaculty);
-        facultyId = parsed.facultyId;
-        facultyName = parsed.name || '';
-      } catch {}
-    }
+    const facultyId = user?.facultyId;
+    const facultyName = user?.name || '';
     if (!facultyId) return;
     setStatusLoading(prev => ({ ...prev, [dutyId]: true }));
     try {
-      await axios.post('/api/duties/completed-duties', { facultyId, facultyName, dutyId, status });
+      await api.post('/api/duties/completed-duties', { facultyId, facultyName, dutyId, status });
       setStatusMap(prev => ({ ...prev, [dutyId]: status }));
     } catch (err) {
       alert('Failed to update status.');

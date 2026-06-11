@@ -1,25 +1,12 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/useAuthStore';
 
 const FacultyDashboard = () => {
   const navigate = useNavigate();
-  const [facultyName, setFacultyName] = useState('Faculty Member');
-  const [facultyId, setFacultyId] = useState('');
-  const [dept, setDept] = useState('Academic Department');
-
-  useEffect(() => {
-    const loggedInFaculty = localStorage.getItem('loggedInFaculty');
-    if (loggedInFaculty) {
-      try {
-        const data = JSON.parse(loggedInFaculty);
-        if (data.name) setFacultyName(data.name);
-        if (data.facultyId) setFacultyId(data.facultyId);
-        if (data.department) setDept(data.department);
-      } catch (e) {
-        console.error("Failed parsing profile data cache", e);
-      }
-    }
-  }, []);
+  const user = useAuthStore((s) => s.user);
+  const facultyName = user?.name || 'Faculty Member';
+  const facultyId = user?.facultyId || '';
+  const dept = user?.department || 'Academic Department';
 
   // Professional metric panels data config
   const summaryMetrics = [

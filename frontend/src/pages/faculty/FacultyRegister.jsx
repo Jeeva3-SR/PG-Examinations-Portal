@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../../lib/api';
 
 const FacultyRegister = () => {
   const navigate = useNavigate();
@@ -42,7 +42,7 @@ const FacultyRegister = () => {
     setLoading(true);
     
     try {
-      const res = await axios.post('/api/register', form);
+      const res = await api.post('/api/register', form);
       setSuccess(res.data.message || 'Registration successful! Redirecting to login...');
       
       // Reset form fields

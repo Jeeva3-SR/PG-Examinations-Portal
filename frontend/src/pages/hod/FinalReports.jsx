@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import AdvanceClaimLetter from '../../components/AdvanceClaimLetter';
 import ReleaseClaimLetterHOD from '../../components/ReleaseClaimLetterHOD';
 
@@ -19,7 +19,7 @@ const FinalReports = () => {
     setToast('');
     setCurrentLetterId(null);
     try {
-      const res = await axios.get('/api/evaluation-letter/forwarded');
+      const res = await api.get('/api/evaluation-letter/forwarded');
       setLetterText(res.data.letterText);
       setCurrentLetterId(res.data._id); // Store the ID of the viewed letter
       // Open in new tab as plain text
@@ -45,7 +45,7 @@ const FinalReports = () => {
     setToast('');
     setError('');
     try {
-      await axios.put(`/api/evaluation-letter/${currentLetterId}/approve`);
+      await api.put(`/api/evaluation-letter/${currentLetterId}/approve`);
       setToast('Evaluation letter approved successfully!');
       setLetterText(''); // Clear letter to force refetch
       setCurrentLetterId(null);
@@ -67,7 +67,7 @@ const FinalReports = () => {
     setToast('');
     setError('');
     try {
-      await axios.put(`/api/evaluation-letter/${currentLetterId}/reject`);
+      await api.put(`/api/evaluation-letter/${currentLetterId}/reject`);
       setToast('Evaluation letter rejected.');
       setLetterText(''); // Clear letter to force refetch
       setCurrentLetterId(null);

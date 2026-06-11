@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, UserCheck } from 'lucide-react';
@@ -18,14 +18,14 @@ const DutyAssignment = () => {
     const [selectedFacultyByRoom, setSelectedFacultyByRoom] = useState({});
 
     const fetchAllDuties = useCallback(() => {
-        axios.get('/api/duties')
+        api.get('/api/duties')
             .then(response => setAllAssignedDuties(response.data))
             .catch(() => setError('Failed to fetch the list of assigned duties.'));
     }, []);
 
     const fetchAllFaculty = useCallback(async () => {
         try {
-            const response = await axios.get('/api/faculty');
+            const response = await api.get('/api/faculty');
             setAllFaculty(response.data);
         } catch (error) {
             console.error('Error fetching faculty:', error);
@@ -35,10 +35,10 @@ const DutyAssignment = () => {
     useEffect(() => {
         fetchAllDuties();
         fetchAllFaculty();
-        axios.get('/api/duties/dates')
+        api.get('/api/duties/dates')
             .then(response => setDateSessions(response.data))
             .catch(() => setError('Failed to fetch exam dates and sessions.'));
-        axios.get('/api/duties/completed-duties')
+        api.get('/api/duties/completed-duties')
             .then(res => {
                 const map = {};
                 res.data.forEach(record => {
@@ -71,7 +71,7 @@ const DutyAssignment = () => {
         setSelectedFacultyByRoom({});
         if (selectedDateSession) {
             const { date, session } = JSON.parse(selectedDateSession);
-            axios.get(`/api/duties/rooms?date=${date}&session=${session}`)
+            api.get(`/api/duties/rooms?date=${date}&session=${session}`)
                 .then(async (response) => {
                     const roomList = response.data;
                     setRooms(roomList);
@@ -79,7 +79,7 @@ const DutyAssignment = () => {
                     const counts = {};
                     await Promise.all(roomList.map(async (room) => {
                         try {
-                            const summaryRes = await axios.get(`/api/seating-arrangement/room-summary?date=${date}&session=${session}&room=${room}`);
+                            const summaryRes = await api.get(`/api/seating-arrangement/room-summary?date=${date}&session=${session}&room=${room}`);
                             counts[room] = summaryRes.data.studentCount || 0;
                         } catch {
                             counts[room] = 0;
@@ -107,7 +107,7 @@ const DutyAssignment = () => {
                 date,
                 session
             };
-            const response = await axios.post('/api/duties', [duty]);
+            const response = await api.post('/api/duties', [duty]);
             setAllAssignedDuties(prev => [...prev, ...response.data]);
             setSelectedFacultyByRoom(prev => ({ ...prev, [room]: '' }));
         } catch (error) {
@@ -122,7 +122,7 @@ const DutyAssignment = () => {
         if (!window.confirm('Remove this invigilator from the room?')) return;
         setIsLoading(true);
         try {
-            await axios.delete(`/api/duties/${dutyId}`);
+            await api.delete(`/api/duties/${dutyId}`);
             setAllAssignedDuties(prev => prev.filter(d => d._id !== dutyId));
             setStatusMap(prev => {
                 const newMap = { ...prev };
@@ -130,7 +130,7 @@ const DutyAssignment = () => {
                 return newMap;
             });
             try {
-                await axios.delete(`/api/duties/completed-duties/${dutyId}`);
+                await api.delete(`/api/duties/completed-duties/${dutyId}`);
             } catch {}
         } catch (error) {
             setError('Failed to remove duty.');
@@ -144,7 +144,7 @@ const DutyAssignment = () => {
         const duty = allAssignedDuties.find(d => d._id === dutyId);
         if (!duty) return;
         try {
-            await axios.post('/api/duties/completed-duties', {
+            await api.post('/api/duties/completed-duties', {
                 dutyId: duty._id, facultyId: duty.facultyId,
                 facultyName: duty.facultyName, status
             });

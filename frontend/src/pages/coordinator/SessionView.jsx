@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import TimetableUpload from '../../components/TimetableUpload';
@@ -21,7 +21,7 @@ const SessionView = () => {
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/sessions');
+      const res = await api.get('/api/sessions');
       setSessions(res.data);
     } catch (err) {
       setSessions([]);
@@ -32,7 +32,7 @@ const SessionView = () => {
 
   useEffect(() => {
     fetchSessions();
-    axios.get('/api/courses').then(res => setCourses(res.data)).catch(() => {});
+    api.get('/api/courses').then(res => setCourses(res.data)).catch(() => {});
   }, []);
 
   const handleNewSessionChange = (e) => {
@@ -42,7 +42,7 @@ const SessionView = () => {
 
   const handleAddSession = async () => {
     try {
-      await axios.post('/api/sessions', newSession);
+      await api.post('/api/sessions', newSession);
       alert('Session added successfully!');
       setNewSession({
         date: '',
@@ -61,7 +61,7 @@ const SessionView = () => {
   const handleDeleteSession = async (id) => {
     if (window.confirm('Are you sure you want to delete this session?')) {
       try {
-        await axios.delete(`/api/sessions/${id}`);
+        await api.delete(`/api/sessions/${id}`);
         alert('Session deleted successfully!');
         fetchSessions(); // Refresh data
       } catch (error) {

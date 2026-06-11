@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/api';
+import useAuthStore from '../store/useAuthStore';
 
 const UnifiedLogin = () => {
   const navigate = useNavigate();
@@ -11,6 +12,7 @@ const UnifiedLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const login = useAuthStore((s) => s.login);
 
   // Clear inputs when switching roles
   const handleRoleChange = (e) => {
@@ -33,7 +35,7 @@ const UnifiedLogin = () => {
 
     try {
       // Send authentic login payload across ALL roles to your production route
-      const res = await axios.post('/api/login', { 
+      const res = await api.post('/api/login', { 
         email: email.trim(), 
         password: password 
       });
@@ -41,34 +43,32 @@ const UnifiedLogin = () => {
       const backendUser = res.data?.user;
       const token = res.data?.token;
 
-      // Ensure a valid token exists and store it for authenticated middleware requests
-      if (token) {
-        localStorage.setItem('token', token);
+      if (!token) {
+        setError('Authentication failed. No token received.');
+        setLoading(false);
+        return;
       }
 
-      // ==========================================
-      // ROLE-BASED REDIRECTION LOGIC
-      // ==========================================
-      if (role === 'faculty' && backendUser?.role === 'faculty') {
-        localStorage.setItem('userRole', 'Faculty');
-        localStorage.setItem('loggedInFaculty', JSON.stringify(backendUser));
+      const userRole = backendUser?.role;
+
+      if (role === 'faculty' && userRole === 'faculty') {
+        login(backendUser, token, 'Faculty');
         navigate('/faculty');
         return;
       } 
       
-      else if (role === 'coordinator' && backendUser?.role === 'coordinator') {
-        localStorage.setItem('userRole', 'Coordinator');
+      if (role === 'coordinator' && userRole === 'coordinator') {
+        login(backendUser, token, 'Coordinator');
         navigate('/dashboard');
         return;
       } 
       
-      else if (role === 'hod' && backendUser?.role === 'hod') {
-        localStorage.setItem('userRole', 'HOD');
+      if (role === 'hod' && userRole === 'hod') {
+        login(backendUser, token, 'HOD');
         navigate('/hod/dashboard');
         return;
       }
 
-      // If backend reports a profile role that doesn't match the selected dropdown tier
       setError(`Authorized profile found, but it does not match the selected tier: ${role.toUpperCase()}.`);
 
     } catch (apiError) {

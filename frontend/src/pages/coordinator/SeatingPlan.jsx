@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
@@ -87,8 +88,7 @@ const SeatingPlan = () => {
 
   useEffect(() => {
     if (!entryId) { setStep('configure'); return; }
-    const token = localStorage.getItem('token');
-    axios.get(`/api/seating-arrangement/by-entry/${entryId}`, { headers: { Authorization: `Bearer ${token}` } })
+    api.get(`/api/seating-arrangement/by-entry/${entryId}`)
       .then(res => {
         if (res.data.length) {
           const arr = res.data.map(r => ({ roomName: r.roomNumber, students: r.students.map(s => ({ regNo: s.regNo, name: s.studentName, category: s.category || '', seatNo: s.seatNo })) }));
@@ -121,10 +121,8 @@ const SeatingPlan = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post('/api/seating-arrangement/generate-from-excel',
-        { entryId, rooms },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.post('/api/seating-arrangement/generate-from-excel',
+        { entryId, rooms }
       );
       setArrangements(res.data.arrangements);
       setSummary({ totalStudents: res.data.totalStudents, roomsUsed: res.data.roomsUsed });
@@ -139,8 +137,7 @@ const SeatingPlan = () => {
     setLoadingRooms(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/rooms', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/api/rooms');
       if (!res.data.length) {
         setError('No saved rooms found. Add rooms in Room Management first.');
       } else {

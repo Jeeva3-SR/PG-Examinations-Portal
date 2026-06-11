@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 
 const EvaluatorDetails = () => {
   const [formData, setFormData] = useState({
@@ -14,10 +14,7 @@ const EvaluatorDetails = () => {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/bank-accounts', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('/api/bank-accounts');
       setAccounts(res.data);
     } catch {
       // silently fail
@@ -42,10 +39,7 @@ const EvaluatorDetails = () => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('/api/bank-accounts', formData, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/api/bank-accounts', formData);
       alert('Evaluator details submitted successfully!');
       setFormData({
         fullName: '',

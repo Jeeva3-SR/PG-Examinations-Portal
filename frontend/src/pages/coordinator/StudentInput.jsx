@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 import { motion } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
@@ -40,7 +41,7 @@ const StudentInput = () => {
 
   const fetchExistingEntry = async (sessionId) => {
     try {
-      const res = await axios.get(`/api/student-inputs/by-session/${sessionId}`);
+      const res = await api.get(`/api/student-inputs/by-session/${sessionId}`);
       if (res.data) {
         const entry = res.data;
         setEditingId(entry._id);
@@ -102,7 +103,7 @@ const StudentInput = () => {
 
   const fetchSessions = async () => {
     try {
-      const response = await axios.get('/api/sessions');
+      const response = await api.get('/api/sessions');
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -111,7 +112,7 @@ const StudentInput = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get('/api/courses');
+      const response = await api.get('/api/courses');
       setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -120,7 +121,7 @@ const StudentInput = () => {
 
   const fetchEntries = async () => {
     try {
-      const response = await axios.get('/api/student-inputs');
+      const response = await api.get('/api/student-inputs');
       setEntries(response.data);
     } catch (error) {
       console.error('Error fetching entries:', error);
@@ -176,10 +177,7 @@ const StudentInput = () => {
     formData.append('file', file);
     formData.append('field', field);
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.patch(`/api/student-inputs/${uploadModalEntry._id}/upload`, formData, {
-        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' }
-      });
+      const res = await api.patch(`/api/student-inputs/${uploadModalEntry._id}/upload`, formData);
       setLocalStatuses(prev => ({ ...prev, [field]: 'uploaded' }));
       setEntries(entries.map(e => e._id === uploadModalEntry._id ? res.data : e));
     } catch (error) {
@@ -191,11 +189,9 @@ const StudentInput = () => {
   };
 
   const handleUploadOrSkip = async (field, status) => {
-    const token = localStorage.getItem('token');
     try {
-      const res = await axios.patch(`/api/student-inputs/${uploadModalEntry._id}/status`,
-        { field, status },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.patch(`/api/student-inputs/${uploadModalEntry._id}/status`,
+        { field, status }
       );
       setLocalStatuses(prev => ({ ...prev, [field]: status }));
       setEntries(entries.map(e => e._id === uploadModalEntry._id ? res.data : e));
@@ -256,12 +252,12 @@ const StudentInput = () => {
       let savedEntry;
       if (editingId) {
         // Update existing entry
-        const response = await axios.put(`/api/student-inputs/${editingId}`, entryData);
+        const response = await api.put(`/api/student-inputs/${editingId}`, entryData);
         savedEntry = response.data;
         setEntries(entries.map(entry => entry._id === editingId ? savedEntry : entry));
         setEditingId(null);
       } else {
-        const response = await axios.post('/api/student-inputs', entryData);
+        const response = await api.post('/api/student-inputs', entryData);
         savedEntry = response.data;
         setEntries([...entries, savedEntry]);
       }

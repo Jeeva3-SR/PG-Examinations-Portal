@@ -1,8 +1,6 @@
-import React from 'react';
-import Sidebar from './PageLayout'; // Ensure this matches your sidebar filename case exactly
+import AppLayout from './AppLayout';
 import { Outlet } from 'react-router-dom';
 
-// 🛡️ FULLY FIXED ABSOLUTE PATH CONFIGURATIONS
 const menuItems = [
   { path: '/hod/dashboard', label: 'Dashboard', icon: '🏠' },
   { path: '/hod/consolidated-sessions', label: 'Consolidated Sessions', icon: '📚' },
@@ -15,21 +13,10 @@ const menuItems = [
   { path: '/login', label: 'Sign Out Portal', icon: '🚪' },
 ];
 
-const HODLayout = () => {
-  return (
-    <Sidebar 
-      menuItems={menuItems} 
-      theme="bg-slate-900 text-slate-300 border-r border-slate-800" 
-      activeClass="bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/10 rounded-xl"
-    >
-      {/* Edge-to-edge flexible desktop container canvas */}
-      <div className="min-h-screen bg-slate-50/50 w-full p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-7xl mx-auto">
-          <Outlet /> 
-        </div>
-      </div>
-    </Sidebar>
-  );
-};
+const HODLayout = () => (
+  <AppLayout menuItems={menuItems}>
+    <Outlet />
+  </AppLayout>
+);
 
 export default HODLayout;

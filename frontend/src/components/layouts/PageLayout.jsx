@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import useAuthStore from '../../store/useAuthStore';
 
 const Sidebar = ({ menuItems, theme = 'bg-slate-900 text-slate-300 border-r border-slate-800', activeClass = 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/10 rounded-xl', children }) => {
   const [open, setOpen] = useState(window.innerWidth >= 1024);
@@ -22,7 +23,7 @@ const Sidebar = ({ menuItems, theme = 'bg-slate-900 text-slate-300 border-r bord
 
   const handleLogout = (e) => {
     e.preventDefault();
-    localStorage.clear();
+    useAuthStore.getState().logout();
     navigate('/login');
   };
 
@@ -89,7 +90,6 @@ const Sidebar = ({ menuItems, theme = 'bg-slate-900 text-slate-300 border-r bord
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  // ⚡ FIX: Uses strict absolute route matching boundaries for parent nodes exclusively
                   end={item.path === '/faculty' || item.path === '/dashboard' || item.path === '/hod/dashboard'}
                   className={({ isActive }) =>
                     `flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all group tracking-wide ${

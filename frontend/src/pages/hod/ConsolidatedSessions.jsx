@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 
 const ConsolidatedSessions = () => {
   const [consolidatedData, setConsolidatedData] = useState([]);
@@ -10,8 +10,8 @@ const ConsolidatedSessions = () => {
       try {
         // Fetch both student inputs and sessions
         const [studentInputsRes, sessionsRes] = await Promise.all([
-          axios.get('/api/student-inputs'),
-          axios.get('/api/sessions')
+          api.get('/api/student-inputs'),
+          api.get('/api/sessions')
         ]);
 
         const studentInputs = studentInputsRes.data;

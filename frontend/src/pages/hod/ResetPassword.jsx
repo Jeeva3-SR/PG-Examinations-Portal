@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 
 const ResetPassword = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -21,7 +21,7 @@ const ResetPassword = () => {
     }
     setLoading(true);
     try {
-      await axios.post('/api/users/hod/reset-password', {
+      await api.post('/api/users/hod/reset-password', {
         currentPassword,
         newPassword
       });

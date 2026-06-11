@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import ReleaseClaimLetter from '../../components/ReleaseClaimLetter';
@@ -28,7 +28,7 @@ const AnswerSheetRequest = () => {
         // Fetch coordinator details
         const fetchCoordinator = async () => {
             try {
-                const res = await axios.get('/api/coordinator');
+                const res = await api.get('/api/coordinator');
                 if (res.data) {
                     setCoordinator({ name: res.data.name, designation: res.data.designation });
                 }
@@ -40,7 +40,7 @@ const AnswerSheetRequest = () => {
         const fetchLetterStatus = async () => {
             try {
                 // Check for latest evaluation letter
-                const evalRes = await axios.get('/api/evaluation-letter/latest');
+                const evalRes = await api.get('/api/evaluation-letter/latest');
                 if (evalRes.data) {
                     setEvalLetter(evalRes.data);
                     setEvalLetterStatus(evalRes.data.status);
@@ -53,7 +53,7 @@ const AnswerSheetRequest = () => {
             }
             try {
                 // Check for latest advance requisition letter
-                const advReqRes = await axios.get('/api/letters/advance-requisition/latest');
+                const advReqRes = await api.get('/api/letters/advance-requisition/latest');
                 if (advReqRes.data) {
                     setAdvReqLetter(advReqRes.data);
                     setAdvReqLetterStatus(advReqRes.data.status);
@@ -75,7 +75,7 @@ const AnswerSheetRequest = () => {
         setLoading(true);
         try {
             // Fetch the latest session to determine the exam month
-            const sessionRes = await axios.get('/api/sessions');
+            const sessionRes = await api.get('/api/sessions');
             const sessions = sessionRes.data;
             let examMonth = '';
             if (sessions && sessions.length > 0) {
@@ -87,7 +87,7 @@ const AnswerSheetRequest = () => {
                 examMonth = examDate.toLocaleString('default', { month: 'long' }).toUpperCase() + ' ' + examDate.getFullYear();
             }
 
-            const response = await axios.get('/api/student-inputs/specialization-summary');
+            const response = await api.get('/api/student-inputs/specialization-summary');
             const summaryData = response.data;
             
             const doc = new jsPDF();
@@ -187,7 +187,7 @@ const AnswerSheetRequest = () => {
         setEvalLoading(true);
         setEvalError('');
         try {
-            const res = await axios.get('/api/evaluation-letter');
+            const res = await api.get('/api/evaluation-letter');
             setEvalLetter({ letterText: res.data.letterText, status: 'generated' });
             setEvalLetterStatus('Ready to Forward');
         } catch (err) {
@@ -202,7 +202,7 @@ const AnswerSheetRequest = () => {
         setEvalLoading(true);
         setEvalError('');
         try {
-            await axios.post('/api/evaluation-letter/forward', { letterText: evalLetter.letterText });
+            await api.post('/api/evaluation-letter/forward', { letterText: evalLetter.letterText });
             setEvalLetterStatus('pending');
         } catch (err) {
             setEvalError('Failed to forward evaluation letter.');
@@ -285,7 +285,7 @@ const AnswerSheetRequest = () => {
         setAdvReqLoading(true);
         setAdvReqError('');
         try {
-            const res = await axios.get('/api/letters/advance-claim');
+            const res = await api.get('/api/letters/advance-claim');
             const data = res.data;
             
             // Construct the full, detailed letter text for viewing
@@ -324,7 +324,7 @@ const AnswerSheetRequest = () => {
         setAdvReqLoading(true);
         setAdvReqError('');
         try {
-            await axios.post('/api/letters/advance-requisition/forward', { letterText: advReqLetter.letterText });
+            await api.post('/api/letters/advance-requisition/forward', { letterText: advReqLetter.letterText });
             setAdvReqLetterStatus('pending');
         } catch (err) {
             setAdvReqError('Failed to forward advance requisition letter.');
@@ -344,7 +344,7 @@ const AnswerSheetRequest = () => {
 
         try {
             // Re-fetch the structured data to ensure the PDF is built with the original values
-            const res = await axios.get('/api/letters/advance-claim');
+            const res = await api.get('/api/letters/advance-claim');
             const data = res.data;
 
             const doc = new jsPDF();

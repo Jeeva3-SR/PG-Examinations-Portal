@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Calendar, Clock, Building2, Users, AlertCircle, UserPlus } from 'lucide-react';
@@ -39,7 +39,7 @@ const SeatingArrangement = () => {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get('/api/seating-arrangement/rooms');
+      const response = await api.get('/api/seating-arrangement/rooms');
       setRooms(response.data);
     } catch (error) {
       setError('Failed to fetch rooms');
@@ -49,7 +49,7 @@ const SeatingArrangement = () => {
   const fetchSessionDates = async () => {
     try {
       // Fetch all sessions from the backend
-      const response = await axios.get('/api/sessions');
+      const response = await api.get('/api/sessions');
       // Extract unique dates from the session objects
       const sessions = response.data;
       const uniqueDatesSet = new Set();
@@ -78,7 +78,7 @@ const SeatingArrangement = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/seating-arrangement/generate', {
+      const response = await api.post('/api/seating-arrangement/generate', {
         date,
         session
       });

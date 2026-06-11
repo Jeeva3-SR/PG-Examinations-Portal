@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 
 const defaultProfile = {
   facultyId: '',
@@ -103,14 +104,14 @@ const UpdateProfile = () => {
   const [fetching, setFetching] = useState(true);
   const [allCourses, setAllCourses] = useState([]);
 
+  const user = useAuthStore((s) => s.user);
+
   useEffect(() => {
-    const loggedInFaculty = localStorage.getItem('loggedInFaculty');
-    if (loggedInFaculty) {
-      const faculty = JSON.parse(loggedInFaculty);
-      if (faculty.facultyId) {
+    if (user) {
+      if (user.facultyId) {
         Promise.all([
-          axios.get(`/api/faculty/${faculty.facultyId}`),
-          axios.get('/api/courses')
+          api.get(`/api/faculty/${user.facultyId}`),
+          api.get('/api/courses')
         ])
           .then(([facultyRes, coursesRes]) => {
             setAllCourses(coursesRes.data);
@@ -118,25 +119,25 @@ const UpdateProfile = () => {
             setFetching(false);
           })
           .catch(() => {
-            axios.get('/api/courses')
+            api.get('/api/courses')
               .then(coursesRes => {
                 setAllCourses(coursesRes.data);
-                setProfile(normalizeProfile(faculty, coursesRes.data));
+                setProfile(normalizeProfile(user, coursesRes.data));
               })
               .finally(() => setFetching(false));
           });
       } else {
-        axios.get('/api/courses')
+        api.get('/api/courses')
           .then(coursesRes => {
             setAllCourses(coursesRes.data);
-            setProfile(normalizeProfile(faculty, coursesRes.data));
+            setProfile(normalizeProfile(user, coursesRes.data));
           })
           .finally(() => setFetching(false));
       }
     } else {
       setFetching(false);
     }
-  }, []);
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -187,20 +188,17 @@ const UpdateProfile = () => {
     setSuccess('');
     try {
       const payload = buildSubmitPayload(profile);
-      const res = await axios.post('/api/faculty/update-profile', payload);
+      const res = await api.post('/api/faculty/update-profile', payload);
       const updatedProfile = normalizeProfile(
         res.data.faculty || payload,
         allCourses
       );
 
       setProfile(updatedProfile);
-      localStorage.setItem(
-        'loggedInFaculty',
-        JSON.stringify({
-          ...JSON.parse(localStorage.getItem('loggedInFaculty') || '{}'),
-          ...updatedProfile
-        })
-      );
+      useAuthStore.getState().updateUser({
+        ...useAuthStore.getState().user,
+        ...updatedProfile
+      });
       setSuccess('Profile records updated successfully!');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {

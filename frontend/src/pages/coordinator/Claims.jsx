@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
-
-const API_BASE = '';
 
 const dutyTypeOptions = [
   'Invigilation',
@@ -36,7 +34,7 @@ const Claims = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`${API_BASE}/api/claims/all`);
+      const res = await api.get('/api/claims/all');
       setClaims(res.data.map((c, i) => ({ ...c, amount: c.amount ?? '', rowIndex: i + 1 })));
     } catch (err) {
       setError('Failed to fetch claims.');
@@ -56,7 +54,7 @@ const Claims = () => {
       return;
     }
     try {
-      await axios.post(`${API_BASE}/api/claims`, {
+      await api.post('/api/claims', {
         claimId: claim.claimId,
         facultyId: claim.facultyId,
         facultyName: claim.facultyName,
@@ -86,7 +84,7 @@ const Claims = () => {
 
   const handleGenerateClaims = async () => {
     try {
-      await axios.post('/api/claims/generate');
+      await api.post('/api/claims/generate');
       fetchClaims();
     } catch (error) {
       console.error('Error generating claims:', error);
