@@ -3,6 +3,7 @@ const Faculty = require('../models/Faculty');
 const { auth, adminAuth } = require('../middleware/auth');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const jwt = require('jsonwebtoken');
+const { normalizeEmail, resolveFacultyId, formatUserResponse } = require('../utils/helpers');
 
 exports.setupAdmin = async (req, res) => {
   try {
@@ -18,7 +19,7 @@ exports.setupAdmin = async (req, res) => {
       return res.status(400).json({ error: 'Required fields are missing.' });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
 
     const existingUser = await User.findOne({
       $or: [{ email: normalizedEmail }, { employeeId }]
@@ -44,16 +45,7 @@ exports.setupAdmin = async (req, res) => {
 
     res.status(201).json({
       message: 'Admin user created successfully',
-      user: {
-        id: admin._id,
-        name: admin.name,
-        email: admin.email,
-        role: admin.role,
-        department: admin.department,
-        employeeId: admin.employeeId,
-        userId: admin.userId,
-        facultyId: admin.userId // Backward-compatibility safety key
-      }
+      user: formatUserResponse(admin)
     });
   } catch (error) {
     console.error('Setup admin error:', error);
@@ -69,7 +61,7 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
     const normalizedPassword = typeof password === 'string' ? password.trim() : password;
 
     // Fetch account profile matching email parameters
@@ -91,21 +83,9 @@ exports.login = async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    // Dynamic resolution layer capturing internal identifiers safely
-    const finalFacultyId = user.userId || user.employeeId || user._id.toString();
-
     res.json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        department: user.department,
-        employeeId: user.employeeId,
-        userId: finalFacultyId,      // Matches views looking for data.userId
-        facultyId: finalFacultyId   // 🛡️ FIXES QPORDERS ROUTE LOOPS
-      }
+      user: formatUserResponse(user)
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -121,7 +101,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Name, email, and password are required.' });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
     const userId = req.body.userId || `FAC-${Date.now()}`;
 
     const existingUser = await User.findOne({ 
@@ -162,21 +142,8 @@ exports.register = async (req, res) => {
 
 exports.getProfile = async (req, res) => {
   try {
-    const finalFacultyId = req.user.userId || req.user.employeeId || req.user._id.toString();
-    
     res.json({
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        department: req.user.department,
-        employeeId: req.user.employeeId,
-        bankAccount: req.user.bankAccount,
-        ifscCode: req.user.ifscCode,
-        userId: finalFacultyId,
-        facultyId: finalFacultyId // Backward-compatibility safety key
-      }
+      user: formatUserResponse(req.user)
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -196,22 +163,9 @@ exports.updateProfile = async (req, res) => {
     updates.forEach(update => req.user[update] = req.body[update]);
     await req.user.save();
 
-    const finalFacultyId = req.user.userId || req.user.employeeId || req.user._id.toString();
-
     res.json({
       message: 'Profile updated successfully',
-      user: {
-        id: req.user._id,
-        name: req.user.name,
-        email: req.user.email,
-        role: req.user.role,
-        department: req.user.department,
-        employeeId: req.user.employeeId,
-        bankAccount: req.user.bankAccount,
-        ifscCode: req.user.ifscCode,
-        userId: finalFacultyId,
-        facultyId: finalFacultyId
-      }
+      user: formatUserResponse(req.user)
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
@@ -263,7 +217,7 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
     const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       // Return 200 for security, preventing account enumeration
