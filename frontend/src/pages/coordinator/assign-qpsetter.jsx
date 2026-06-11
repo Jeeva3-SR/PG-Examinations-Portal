@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 
 
 const AssignQPSetter = () => {
-  const [subjects, setSubjects] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [allFaculty, setAllFaculty] = useState([]);
   const [faculty, setFaculty] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState('');
   const [selectedFaculty, setSelectedFaculty] = useState('');
@@ -19,63 +20,35 @@ const AssignQPSetter = () => {
   const [generatingRow, setGeneratingRow] = useState(null);
   const [qpOrders, setQpOrders] = useState([]);
 
-  // Fetch subjects from student inputs
+  // Fetch courses and faculty on mount
   useEffect(() => {
-    const fetchSubjects = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/student-inputs');
-        // Get unique course names
-        const uniqueSubjects = [...new Set(response.data.map(item => item.courseName))];
-        setSubjects(uniqueSubjects);
+        const [coursesRes, facultyRes, qpRes] = await Promise.all([
+          axios.get('/api/courses'),
+          axios.get('/api/faculty'),
+          axios.get('/api/qporders'),
+        ]);
+        setCourses(coursesRes.data);
+        setAllFaculty(facultyRes.data);
+        setQpOrders(qpRes.data);
       } catch (error) {
-        setError('Error fetching subjects');
-        console.error('Error fetching subjects:', error);
+        setError('Error fetching data');
       } finally {
         setLoading(false);
       }
     };
-
-    fetchSubjects();
+    fetchData();
   }, []);
 
-  // Fetch faculty when subject is selected
+  // Show all faculty when subject is selected
   useEffect(() => {
-    const fetchFaculty = async () => {
-      if (!selectedSubject) {
-        setFaculty([]);
-        return;
-      }
-
-      try {
-        const response = await axios.get('http://localhost:5000/api/faculty');
-        // Filter faculty based on the selected subject
-        const matchingFaculty = response.data.filter(f => 
-          f.course.includes(selectedSubject)
-        );
-        setFaculty(matchingFaculty);
-      } catch (error) {
-        setError('Error fetching faculty');
-        console.error('Error fetching faculty:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFaculty();
-  }, [selectedSubject]);
-
-  // Fetch QP Orders from backend
-  useEffect(() => {
-    const fetchQpOrders = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/qporders');
-        setQpOrders(res.data);
-      } catch (err) {
-        setQpOrders([]);
-      }
-    };
-    fetchQpOrders();
-  }, []);
+    if (!selectedSubject) {
+      setFaculty([]);
+      return;
+    }
+    setFaculty(allFaculty);
+  }, [selectedSubject, allFaculty]);
 
   const handleAssign = async () => {
     if (!selectedSubject || !selectedFaculty) {
@@ -85,21 +58,22 @@ const AssignQPSetter = () => {
 
     try {
       const selectedFacultyData = faculty.find(f => f.facultyId === selectedFaculty);
-      await axios.post('http://localhost:5000/api/assigned-qpsetters', {
+      await axios.post('/api/assigned-qpsetters', {
         subject: selectedSubject,
         facultyId: selectedFacultyData.facultyId,
         facultyName: selectedFacultyData.name
       });
+      const selectedCourse = courses.find(c => c.courseName === selectedSubject);
       setSuccess('Faculty assigned successfully');
-      setIsAssigned(false); // Reset form for next assignment
-      // Append the new entry to the list
+      setIsAssigned(false);
       setAssignedRows(prev => [
         ...prev,
         {
           courseName: selectedSubject,
+          courseCode: selectedCourse?.courseCode || '',
           facultyName: selectedFacultyData.name,
           facultyId: selectedFacultyData.facultyId,
-          generatedType: null // Reset type
+          generatedType: null
         }
       ]);
       setSelectedSubject('');
@@ -122,8 +96,9 @@ const AssignQPSetter = () => {
     try {
       setError('');
       setSuccess('');
-      await axios.post('http://localhost:5000/api/qporders/generate', {
+      await axios.post('/api/qporders/generate', {
         facultyId: row.facultyId,
+        courseCode: row.courseCode,
         courseName: row.courseName,
         type
       });
@@ -134,6 +109,7 @@ const AssignQPSetter = () => {
       ));
       setGeneratingRow(null);
     } catch (error) {
+      console.log('[QP Frontend] Error response:', error.response?.status, JSON.stringify(error.response?.data));
       setError(error.response?.data?.error || 'Failed to generate QP Order');
       setGeneratingRow(null);
     }
@@ -199,19 +175,19 @@ const AssignQPSetter = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Select Subject
               </label>
-              <select
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                disabled={isAssigned}
-              >
-                <option value="">Select a subject</option>
-                {subjects.map((subject, index) => (
-                  <option key={index} value={subject}>
-                    {subject}
-                  </option>
-                ))}
-              </select>
+                <select
+                  value={selectedSubject}
+                  onChange={(e) => setSelectedSubject(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  disabled={isAssigned}
+                >
+                  <option value="">Select a subject</option>
+                  {courses.map((c) => (
+                    <option key={c._id} value={c.courseName}>
+                      {c.courseCode} - {c.courseName}
+                    </option>
+                  ))}
+                </select>
             </div>
 
             {/* Faculty Dropdown */}

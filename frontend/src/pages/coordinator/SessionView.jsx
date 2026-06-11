@@ -8,6 +8,7 @@ import TimetableUpload from '../../components/TimetableUpload';
 const SessionView = () => {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [newSession, setNewSession] = useState({
     date: '',
@@ -31,6 +32,7 @@ const SessionView = () => {
 
   useEffect(() => {
     fetchSessions();
+    axios.get('/api/courses').then(res => setCourses(res.data)).catch(() => {});
   }, []);
 
   const handleNewSessionChange = (e) => {
@@ -117,29 +119,42 @@ const SessionView = () => {
                   <option value="FN">FN</option>
                   <option value="AN">AN</option>
                 </select>
-                <input
-                  type="text"
+                <select
                   name="specialization"
-                  placeholder="Specialization"
                   value={newSession.specialization}
                   onChange={handleNewSessionChange}
                   className="p-2 border rounded-md"
-                />
-                <input
-                  type="text"
+                >
+                  <option value="">Select Specialization</option>
+                  <option value="B.E">B.E</option>
+                  <option value="M.E">M.E</option>
+                </select>
+                <select
                   name="courseCode"
-                  placeholder="Course Code"
                   value={newSession.courseCode}
-                  onChange={handleNewSessionChange}
+                  onChange={(e) => {
+                    const code = e.target.value;
+                    const course = courses.find(c => c.courseCode === code);
+                    setNewSession(prev => ({
+                      ...prev,
+                      courseCode: code,
+                      courseName: course ? course.courseName : '',
+                    }));
+                  }}
                   className="p-2 border rounded-md"
-                />
+                >
+                  <option value="">Select Course</option>
+                  {courses.map(c => (
+                    <option key={c._id} value={c.courseCode}>{c.courseCode} - {c.courseName}</option>
+                  ))}
+                </select>
                 <input
                   type="text"
                   name="courseName"
                   placeholder="Course Name"
                   value={newSession.courseName}
-                  onChange={handleNewSessionChange}
-                  className="p-2 border rounded-md"
+                  readOnly
+                  className="p-2 border rounded-md bg-gray-50"
                 />
               </div>
               <button
@@ -203,6 +218,12 @@ const SessionView = () => {
                               className="text-green-600 hover:text-green-900"
                             >
                               Enter Students
+                            </button>
+                            <button
+                              onClick={() => navigate(`/duties?date=${encodeURIComponent(s.date)}&session=${s.session}`)}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Assign Duties
                             </button>
                             <button
                               onClick={() => handleDeleteSession(s._id)}

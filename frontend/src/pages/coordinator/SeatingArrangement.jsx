@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Building2, Users, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Building2, Users, AlertCircle, UserPlus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 
@@ -16,6 +17,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const SeatingArrangement = () => {
+  const navigate = useNavigate();
   const [date, setDate] = useState('');
   const [session, setSession] = useState('');
   const [rooms, setRooms] = useState([]);
@@ -242,28 +244,38 @@ const SeatingArrangement = () => {
             {arrangements.length > 0 && (
               <>
                 <div className="bg-gray-100 p-4 rounded mt-4 overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
-                      <tr>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Number</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Floor</th>
-                        <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Students</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {arrangements.map((room, idx) => (
-                        <tr key={idx}>
-                          <td className="px-4 py-2 whitespace-nowrap">{room.roomNumber}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{new Date(room.date).toLocaleDateString()}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{room.session}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{room.floor}</td>
-                          <td className="px-4 py-2 whitespace-nowrap">{room.students.length}</td>
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead>
+                        <tr>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room Number</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Session</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Floor</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Students</th>
+                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {arrangements.map((room, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-2 whitespace-nowrap">{room.roomNumber}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">{new Date(room.date).toLocaleDateString()}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">{room.session}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">{room.floor}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">{room.students.length}</td>
+                            <td className="px-4 py-2 whitespace-nowrap">
+                              <button
+                                onClick={() => navigate(`/duties?date=${encodeURIComponent(room.date)}&session=${room.session}`)}
+                                className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-xs font-medium bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors"
+                              >
+                                <UserPlus size={14} />
+                                Assign Invigilator
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                 </div>
                 <button
                   onClick={downloadPDF}

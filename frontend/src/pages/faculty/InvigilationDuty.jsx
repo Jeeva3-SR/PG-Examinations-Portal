@@ -47,15 +47,18 @@ const InvigilationDuty = () => {
   const handleStatus = async (dutyId, status) => {
     const loggedInFaculty = localStorage.getItem('loggedInFaculty');
     let facultyId = null;
+    let facultyName = '';
     if (loggedInFaculty) {
       try {
-        facultyId = JSON.parse(loggedInFaculty).facultyId;
+        const parsed = JSON.parse(loggedInFaculty);
+        facultyId = parsed.facultyId;
+        facultyName = parsed.name || '';
       } catch {}
     }
     if (!facultyId) return;
     setStatusLoading(prev => ({ ...prev, [dutyId]: true }));
     try {
-      await axios.post('/api/duties/completed-duties', { facultyId, dutyId, status });
+      await axios.post('/api/duties/completed-duties', { facultyId, facultyName, dutyId, status });
       setStatusMap(prev => ({ ...prev, [dutyId]: status }));
     } catch (err) {
       alert('Failed to update status.');
@@ -98,6 +101,9 @@ const InvigilationDuty = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Duty Type
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -116,11 +122,35 @@ const InvigilationDuty = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {'Invigilator'}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      {statusMap[duty._id] === 'completed' ? (
+                        <span className="text-green-600 font-semibold">Completed</span>
+                      ) : statusMap[duty._id] === 'not completed' ? (
+                        <span className="text-red-600 font-semibold">Not Completed</span>
+                      ) : (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleStatus(duty._id, 'completed')}
+                            disabled={statusLoading[duty._id]}
+                            className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 disabled:opacity-50 text-xs"
+                          >
+                            {statusLoading[duty._id] ? '...' : 'Completed'}
+                          </button>
+                          <button
+                            onClick={() => handleStatus(duty._id, 'not completed')}
+                            disabled={statusLoading[duty._id]}
+                            className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 disabled:opacity-50 text-xs"
+                          >
+                            {statusLoading[duty._id] ? '...' : 'Not Completed'}
+                          </button>
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-4 text-center text-sm text-gray-500">
+                  <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
                     No duties assigned.
                   </td>
                 </tr>

@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const QPOrder = require('../models/QPOrder');
-const Course = require('../models/Course');
-const Faculty = require('../models/Faculty');
+const Faculty = require('../models/Course');
+const Course = require('../models/Faculty');
 const Session = require('../models/Session');
 const StudentInput = require('../models/StudentInput');
 
@@ -195,17 +195,29 @@ router.post('/generate-all', async (req, res) => {
  */
 // Generate QP Order
 router.post('/generate', async (req, res) => {
+  console.log('[QP Generate] Body:', JSON.stringify(req.body));
   try {
-    const { facultyId, courseName, type } = req.body;
+    const { facultyId, courseCode, courseName, type } = req.body;
 
-    // Find faculty
+    console.log('[QP Generate] Looking up Faculty with facultyId:', facultyId);
     const faculty = await Faculty.findOne({ facultyId });
     if (!faculty) {
+      console.log('[QP Generate] Faculty NOT found for facultyId:', facultyId);
+      console.log('[QP Generate] Faculty model name:', Faculty.modelName);
       return res.status(404).json({ error: 'Faculty not found' });
     }
+    console.log('[QP Generate] Faculty found:', faculty.name, '(model:', Faculty.modelName + ')');
 
-    // Find session
-    const session = await Session.findOne({ courseName });
+    console.log('[QP Generate] Looking up Session with courseCode:', courseCode, '| courseName:', courseName);
+    let session = null;
+    if (courseCode) {
+      session = await Session.findOne({ courseCode });
+      console.log('[QP Generate] Session lookup by courseCode:', courseCode, '->', session ? session.courseCode : 'NOT FOUND');
+    }
+    if (!session) {
+      session = await Session.findOne({ courseName });
+      console.log('[QP Generate] Session lookup by courseName:', courseName, '->', session ? session.courseCode : 'NOT FOUND');
+    }
     if (!session) {
       return res.status(404).json({ error: 'Course session not found' });
     }

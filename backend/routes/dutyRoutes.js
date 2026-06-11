@@ -4,8 +4,9 @@ const Duty = require('../models/Duty');
 const Seating = require('../models/Seating');
 const Session = require('../models/Session');
 const SeatingArrangement = require('../models/SeatingArrangement');
+const Room = require('../models/Room');
 const CompletedDuty = require('../models/CompletedDuty');
-const Faculty = require('../models/Faculty');
+const Faculty = require('../models/Course');
 
 /**
  * @openapi
@@ -304,13 +305,18 @@ router.get('/rooms', async (req, res) => {
         const endOfDay = new Date(startOfDay);
         endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
 
-        const rooms = await SeatingArrangement.distinct('roomNumber', {
+        let rooms = await SeatingArrangement.distinct('roomNumber', {
             date: {
                 $gte: startOfDay,
                 $lt: endOfDay
             },
             session
         });
+        // Fallback: if no seating arrangement found, return all rooms from Room model
+        if (!rooms || rooms.length === 0) {
+            const allRooms = await Room.find().sort({ floor: 1, roomNumber: 1 });
+            rooms = allRooms.map(r => r.roomNumber);
+        }
         res.json(rooms);
     } catch (error) {
         res.status(500).json({ message: 'Error fetching rooms', error: error.message });

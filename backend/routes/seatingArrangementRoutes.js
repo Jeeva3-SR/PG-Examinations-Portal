@@ -274,4 +274,25 @@ router.get('/by-entry/:entryId', async (req, res) => {
   }
 });
 
+// GET /api/seating-arrangement/by-date-session?date=...&session=...
+router.get('/by-date-session', async (req, res) => {
+  try {
+    const { date, session } = req.query;
+    if (!date || !session) {
+      return res.status(400).json({ error: 'Date and session are required' });
+    }
+    const startOfDay = new Date(date.split('T')[0] + 'T00:00:00.000Z');
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const endOfDay = new Date(startOfDay);
+    endOfDay.setUTCHours(23, 59, 59, 999);
+    const arrangements = await SeatingArrangement.find({
+      date: { $gte: startOfDay, $lte: endOfDay },
+      session
+    });
+    res.json({ arrangements });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router; 

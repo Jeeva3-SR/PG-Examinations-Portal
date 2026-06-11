@@ -24,7 +24,7 @@ const FacultyDashboard = () => {
   // Professional metric panels data config
   const summaryMetrics = [
     { label: "Assigned Courses", value: "02", color: "text-indigo-600 bg-indigo-50 border-indigo-100", icon: "📚", path: "/faculty/assigned-courses" },
-    { label: "Active QP Orders", value: "01", color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: "📄", path: "/qp-orders" },
+    { label: "Active QP Orders", value: "01", color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: "📄", path: "/faculty/qp-orders" },
     { label: "Invigilation Duties", value: "04", color: "text-amber-600 bg-amber-50 border-amber-100", icon: "👥", path: "/faculty/invigilation-duty" },
   ];
 
