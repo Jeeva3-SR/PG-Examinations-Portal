@@ -2,9 +2,6 @@ const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/seatingArrangementController');
 
-// Generate seating arrangement by date and session
-router.post('/generate', ctrl.generateSeating);
-
 // Get all rooms
 router.get('/rooms', ctrl.getRooms);
 
