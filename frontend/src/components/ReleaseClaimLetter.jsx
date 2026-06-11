@@ -12,7 +12,7 @@ const ReleaseClaimLetter = () => {
         setLoading(true);
         setToast(null);
         try {
-            const res = await axios.get('http://localhost:5000/api/claims/advance-details');
+            const res = await axios.get('/api/claims/advance-details');
             const data = res.data;
             if (!data) {
                 setToast({ type: 'error', message: 'Could not fetch letter data.' });
@@ -20,7 +20,7 @@ const ReleaseClaimLetter = () => {
                 return;
             }
             // Forward the letter data to the backend
-            await axios.post('http://localhost:5000/api/claims/forward-advance-letter', {
+            await axios.post('/api/claims/forward-advance-letter', {
                 totalAmount: data.totalAmount,
                 formattedMonthYear: data.formattedMonthYear
             });

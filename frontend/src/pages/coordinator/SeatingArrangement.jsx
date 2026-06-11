@@ -49,7 +49,7 @@ const SeatingArrangement = () => {
   const fetchSessionDates = async () => {
     try {
       // Fetch all sessions from the backend
-      const response = await axios.get('http://localhost:5000/api/sessions');
+      const response = await axios.get('/api/sessions');
       // Extract unique dates from the session objects
       const sessions = response.data;
       const uniqueDatesSet = new Set();

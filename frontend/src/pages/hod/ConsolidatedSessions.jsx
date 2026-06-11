@@ -10,8 +10,8 @@ const ConsolidatedSessions = () => {
       try {
         // Fetch both student inputs and sessions
         const [studentInputsRes, sessionsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/student-inputs'),
-          axios.get('http://localhost:5000/api/sessions')
+          axios.get('/api/student-inputs'),
+          axios.get('/api/sessions')
         ]);
 
         const studentInputs = studentInputsRes.data;

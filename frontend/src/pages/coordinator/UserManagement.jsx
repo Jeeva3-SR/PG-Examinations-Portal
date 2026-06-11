@@ -50,7 +50,7 @@ const UserManagement = () => {
     setSuccess('');
 
     try {
-      await axios.post('http://localhost:5000/api/register', formData);
+      await axios.post('/api/register', formData);
       setSuccess('Faculty registered successfully');
       setFormData({
         name: '',
@@ -69,7 +69,7 @@ const UserManagement = () => {
 
   const handleStatusChange = async (userId, isActive) => {
     try {
-      await axios.patch(`http://localhost:5000/api/auth/users/${userId}/status`, {
+      await axios.patch(`/api/auth/users/${userId}/status`, {
         isActive
       });
       setSuccess('User status updated successfully');

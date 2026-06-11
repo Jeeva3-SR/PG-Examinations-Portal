@@ -13,7 +13,7 @@ const QPOrder = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/qporders');
+      const response = await axios.get('/api/qporders');
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -22,7 +22,7 @@ const QPOrder = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/courses');
+      const response = await axios.get('/api/courses');
       setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -31,7 +31,7 @@ const QPOrder = () => {
 
   const handleGenerateOrders = async () => {
     try {
-      await axios.post('http://localhost:5000/api/qporders/generate-all');
+      await axios.post('/api/qporders/generate-all');
       fetchOrders();
     } catch (error) {
       console.error('Error generating orders:', error);
@@ -40,7 +40,7 @@ const QPOrder = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await axios.patch(`http://localhost:5000/api/qporders/${orderId}/status`, {
+      await axios.patch(`/api/qporders/${orderId}/status`, {
         status: newStatus,
       });
       fetchOrders();

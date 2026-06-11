@@ -46,7 +46,7 @@ const TimetableUpload = ({ onUploadSuccess }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post('http://localhost:5000/api/sessions/upload', formData, {
+      const response = await axios.post('/api/sessions/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 30000, // 30 second timeout
       });

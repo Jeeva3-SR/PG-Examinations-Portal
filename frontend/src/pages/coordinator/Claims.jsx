@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = '';
 
 const dutyTypeOptions = [
   'Invigilation',
@@ -86,7 +86,7 @@ const Claims = () => {
 
   const handleGenerateClaims = async () => {
     try {
-      await axios.post('http://localhost:5000/api/claims/generate');
+      await axios.post('/api/claims/generate');
       fetchClaims();
     } catch (error) {
       console.error('Error generating claims:', error);

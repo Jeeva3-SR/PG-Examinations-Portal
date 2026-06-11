@@ -34,8 +34,8 @@ const ApproveQPOrders = () => {
       try {
         setLoading(true);
         const [ordersRes, settersRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/qporders'),
-          axios.get('http://localhost:5000/api/assigned-qpsetters').catch(() => ({ data: [] }))
+          axios.get('/api/qporders'),
+          axios.get('/api/assigned-qpsetters').catch(() => ({ data: [] }))
         ]);
         
         setOrders(ordersRes.data);
@@ -226,7 +226,7 @@ const ApproveQPOrders = () => {
 
   const handleUpdateStatus = async (orderId, targetStatus) => {
     try {
-      const response = await axios.patch(`http://localhost:5000/api/qporders/${orderId}/status`, {
+      const response = await axios.patch(`/api/qporders/${orderId}/status`, {
         status: targetStatus
       });
       
@@ -251,7 +251,7 @@ const ApproveQPOrders = () => {
   const handleBulkAction = async (targetStatus) => {
     if (selectedOrders.length === 0) return;
     try {
-      await axios.post('http://localhost:5000/api/qporders/bulk-status', {
+      await axios.post('/api/qporders/bulk-status', {
         orderIds: selectedOrders,
         status: targetStatus
       });

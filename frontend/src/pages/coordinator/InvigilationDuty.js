@@ -24,7 +24,7 @@ const InvigilationDuty = () => {
 
   const fetchSessions = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/sessions');
+      const response = await axios.get('/api/sessions');
       setSessions(response.data);
     } catch (error) {
       console.error('Error fetching sessions:', error);
@@ -34,7 +34,7 @@ const InvigilationDuty = () => {
   const fetchDuties = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/duties/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
+        `/api/duties/range?startDate=${dateRange.startDate}&endDate=${dateRange.endDate}`
       );
       setDuties(response.data);
     } catch (error) {
@@ -58,7 +58,7 @@ const InvigilationDuty = () => {
     if (!selectedSession) return;
 
     try {
-      await axios.post(`http://localhost:5000/api/duties/generate/${selectedSession}`);
+      await axios.post(`/api/duties/generate/${selectedSession}`);
       fetchDuties();
     } catch (error) {
       console.error('Error generating duties:', error);
@@ -67,7 +67,7 @@ const InvigilationDuty = () => {
 
   const handleStatusChange = async (dutyId, newStatus) => {
     try {
-      await axios.patch(`http://localhost:5000/api/duties/${dutyId}`, {
+      await axios.patch(`/api/duties/${dutyId}`, {
         status: newStatus,
       });
       fetchDuties();

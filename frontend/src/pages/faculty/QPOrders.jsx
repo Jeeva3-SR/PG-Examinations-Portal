@@ -29,7 +29,7 @@ const QPOrders = () => {
   useEffect(() => {
     const fetchCoordinator = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/coordinator');
+        const res = await axios.get('/api/coordinator');
         if (res.data) {
           setCoordinator({ name: res.data.name, designation: res.data.designation });
         }
