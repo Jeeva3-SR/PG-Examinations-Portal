@@ -16,8 +16,7 @@ const sessionSchema = new mongoose.Schema({
   },
   courseCode: {
     type: String,
-    required: true,
-    ref: 'Course'
+    required: true
   },
   courseName: {
     type: String,
@@ -26,12 +25,55 @@ const sessionSchema = new mongoose.Schema({
   specialization: {
     type: String,
     required: true
+  },
+  department: {
+    type: String,
+    required: true,
+    trim: true,
+    default: 'Unassigned'
+  },
+  status: {
+    type: String,
+    enum: ['active', 'cancelled'],
+    default: 'active'
+  },
+  cancelledAt: {
+    type: Date,
+    default: null
+  },
+  cancelReason: {
+    type: String,
+    default: ''
+  },
+  originalDate: {
+    type: Date,
+    default: null
+  },
+  rescheduleType: {
+    type: String,
+    enum: ['prepone', 'postpone', null],
+    default: null
+  },
+  rescheduleReason: {
+    type: String,
+    default: ''
+  },
+  rescheduledAt: {
+    type: Date,
+    default: null
   }
 }, {
   timestamps: true
 });
 
-// Compound index for date and session
 sessionSchema.index({ date: 1, session: 1 });
+sessionSchema.index(
+  { date: 1, session: 1, courseCode: 1, department: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { status: 'active' },
+    name: 'session_unique_active_slot',
+  }
+);
 
-module.exports = mongoose.model('Session', sessionSchema); 
+module.exports = mongoose.model('Session', sessionSchema);

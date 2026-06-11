@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const StudentInput = require('../models/StudentInput');
+const Session = require('../models/Session');
 const { uploadFile } = require('../utils/s3');
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
@@ -39,6 +40,16 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         message: `Missing required fields: ${missingFields.join(', ')}`
       });
+    }
+
+    if (req.body.sessionRef) {
+      const linkedSession = await Session.findById(req.body.sessionRef);
+      if (!linkedSession) {
+        return res.status(404).json({ message: 'Linked session not found.' });
+      }
+      if (linkedSession.status === 'cancelled') {
+        return res.status(400).json({ message: 'Student lists cannot be assigned to a cancelled session.' });
+      }
     }
 
     // Convert date string to Date object if it's a string
@@ -90,7 +101,8 @@ router.post('/', async (req, res) => {
       totalCEG,
       totalMIT,
       date,
-      session: req.body.session
+      session: req.body.session,
+      sessionRef: req.body.sessionRef || undefined,
     });
 
     console.log('Creating student input:', studentInput);
@@ -127,13 +139,16 @@ router.get('/range', async (req, res) => {
 // Get student input by session ref (or by session data fields for backward compat)
 router.get('/by-session/:sessionId', async (req, res) => {
   try {
-    const Session = require('../models/Session');
+    const SessionModel = require('../models/Session');
     // First try matching by sessionRef
     let entry = await StudentInput.findOne({ sessionRef: req.params.sessionId });
     if (entry) return res.json(entry);
     // Fallback: find the session doc, then match by its fields
-    const session = await Session.findById(req.params.sessionId);
+    const session = await SessionModel.findById(req.params.sessionId);
     if (!session) return res.json(null);
+    if (session.status === 'cancelled') {
+      return res.status(400).json({ message: 'Student lists cannot be assigned to a cancelled session.' });
+    }
     entry = await StudentInput.findOne({
       courseCode: session.courseCode,
       specialization: session.specialization,

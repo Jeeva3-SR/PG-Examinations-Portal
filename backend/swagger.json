@@ -38,7 +38,13 @@
       "post": { "summary": "Create session", "requestBody": { "required": true, "content": { "application/json": { "schema": { "$ref": "#/components/schemas/SessionCreate" } } } }, "responses": { "201": { "description": "Created" } } }
     },
     "/api/sessions/upload": {
-      "post": { "summary": "Upload timetable (XLSX/CSV)", "requestBody": { "content": { "multipart/form-data": { "schema": { "type": "object", "properties": { "file": { "type": "string", "format": "binary" } } } } } }, "responses": { "200": { "description": "Processed" } } }
+      "post": { "summary": "Upload timetable directly (XLSX/CSV)", "requestBody": { "content": { "multipart/form-data": { "schema": { "type": "object", "properties": { "file": { "type": "string", "format": "binary" } } } } } }, "responses": { "200": { "description": "Processed" } } }
+    },
+    "/api/sessions/upload/preview": {
+      "post": { "summary": "Preview extracted timetable without saving", "requestBody": { "content": { "multipart/form-data": { "schema": { "type": "object", "properties": { "file": { "type": "string", "format": "binary" } } } } } }, "responses": { "200": { "description": "Extracted sessions for review" } } }
+    },
+    "/api/sessions/upload/commit": {
+      "post": { "summary": "Commit reviewed timetable sessions", "requestBody": { "required": true, "content": { "application/json": { "schema": { "type": "object", "properties": { "sessions": { "type": "array", "items": { "type": "object" } } } } } } }, "responses": { "200": { "description": "Committed" } } }
     },
     "/api/sessions/consolidated": { "get": { "summary": "Consolidated sessions", "responses": { "200": { "description": "Array", "content": { "application/json": { "schema": { "type": "array", "items": { "type": "object" } } } } } } },
     "/api/sessions/count": { "get": { "summary": "Session count", "responses": { "200": { "description": "Count", "content": { "application/json": { "schema": { "type": "object", "properties": { "sessionCount": { "type": "integer" } } } } } } } },

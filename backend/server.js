@@ -106,8 +106,17 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Handle 404 errors
+// Handle 404 errors (ignore webpack HMR noise accidentally proxied to backend)
 app.use((req, res) => {
+  const isDevAsset = /\.hot-update\.(json|js)$/.test(req.url)
+    || req.url.startsWith('/sockjs-node')
+    || req.url.startsWith('/static/')
+    || req.url === '/favicon.ico';
+
+  if (isDevAsset) {
+    return res.status(404).end();
+  }
+
   console.log('404 - Route not found:', req.method, req.url);
   res.status(404).json({ message: 'Route not found' });
 });
