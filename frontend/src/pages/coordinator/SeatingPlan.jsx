@@ -212,7 +212,7 @@ const SeatingPlan = () => {
             {rooms.length > 0 && (
               <div className="mb-4 space-y-2">
                 {rooms.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
+                  <div key={r.name || i} className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
                     <span className="font-medium">{r.name}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-gray-500">Capacity: {r.capacity}</span>
@@ -285,7 +285,7 @@ const SeatingPlan = () => {
 
             <div ref={printRef}>
               {arrangements.map((room, i) => (
-                <RoomPlan key={i} room={room} />
+                <RoomPlan key={room.roomName || `room-${i}`} room={room} />
               ))}
             </div>
           </>

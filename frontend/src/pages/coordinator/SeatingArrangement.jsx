@@ -257,7 +257,7 @@ const SeatingArrangement = () => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {arrangements.map((room, idx) => (
-                          <tr key={idx}>
+                          <tr key={room._id || room.roomNumber || idx}>
                             <td className="px-4 py-2 whitespace-nowrap">{room.roomNumber}</td>
                             <td className="px-4 py-2 whitespace-nowrap">{new Date(room.date).toLocaleDateString()}</td>
                             <td className="px-4 py-2 whitespace-nowrap">{room.session}</td>

@@ -322,7 +322,7 @@ const StudentInput = () => {
             >
               <option value="">Select Specialization</option>
               {specializations.map((spec, index) => (
-                <option key={index} value={spec}>
+                <option key={spec || index} value={spec}>
                   {spec}
                 </option>
               ))}

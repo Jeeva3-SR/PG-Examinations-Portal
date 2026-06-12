@@ -43,7 +43,7 @@ const FacultyDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {summaryMetrics.map((metric, i) => (
           <div 
-            key={i} 
+            key={metric.label} 
             onClick={() => navigate(metric.path)}
             className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md hover:border-slate-200 transition-all group"
           >
@@ -68,7 +68,7 @@ const FacultyDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {quickActions.map((action, idx) => (
             <div 
-              key={idx}
+              key={action.title}
               onClick={() => navigate(action.path)}
               className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
             >

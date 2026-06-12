@@ -250,7 +250,7 @@ const AssignQPSetter = () => {
                         {assignedRows.map((row, idx) => {
                           const qpOrder = getQpOrderForRow(row);
                           return (
-                            <tr key={idx}>
+                            <tr key={row._id || `assigned-${row.courseName}-${row.facultyName}-${idx}`}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.courseName}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.facultyName}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

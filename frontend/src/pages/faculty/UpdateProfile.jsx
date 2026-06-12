@@ -431,7 +431,7 @@ const UpdateProfile = () => {
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {profile.areasOfExpertise.map((exp, idx) => (
-                <div key={idx} className="flex items-center space-x-2 bg-slate-50 p-2 border border-slate-200/60 rounded-xl shadow-inner">
+                <div key={`exp-${exp}-${idx}`} className="flex items-center space-x-2 bg-slate-50 p-2 border border-slate-200/60 rounded-xl shadow-inner">
                   <input value={exp} onChange={e => handleArrayChange(idx, e.target.value)} className="w-full bg-transparent border-none py-1 px-2 text-sm text-slate-800 outline-none placeholder-slate-400 font-semibold" placeholder="e.g., Cryptography" />
                   <button type="button" onClick={() => removeExpertise(idx)} className="text-xs text-red-500 hover:bg-red-50 p-1.5 rounded-lg font-medium transition-colors">
                     Remove
@@ -452,7 +452,7 @@ const UpdateProfile = () => {
             
             <div className="space-y-3">
               {profile.classesHandled.map((cls, idx) => (
-                <div key={idx} className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-slate-50/50 border border-slate-200/60 p-4 rounded-xl relative group">
+                <div key={`class-${idx}`} className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-slate-50/50 border border-slate-200/60 p-4 rounded-xl relative group">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-grow">
                     <select
                       value={String(cls.course || '')}

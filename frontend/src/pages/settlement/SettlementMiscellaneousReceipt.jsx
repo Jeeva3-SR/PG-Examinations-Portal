@@ -84,7 +84,7 @@ const SettlementMiscellaneousReceipt = () => {
         </thead>
         <tbody>
           {expenses.map((item, index) => (
-            <tr key={index} className="border-b border-black">
+            <tr key={item.id || `expense-${index}`} className="border-b border-black">
               <td className="p-2 border-r border-black">{index + 1}</td>
               <td className="p-2 border-r border-black">
                 {isPdf ? (
