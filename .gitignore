@@ -31,7 +31,7 @@ out/
 .docusaurus/
 
 # Server-side / TypeScript compilation outputs
-lib/
+
 artifacts/
 
 # ==========================================
