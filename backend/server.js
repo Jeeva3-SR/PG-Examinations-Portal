@@ -44,7 +44,11 @@ app.get('/api/test', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  
+
+  if (err.isOperational) {
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+
   // Handle multer errors
   if (err.name === 'MulterError') {
     return res.status(400).json({
@@ -53,7 +57,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Handle mongoose errors
+  // Handle mongoose validation errors
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Validation error',
@@ -61,11 +65,17 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Handle other errors
+  // Handle mongoose cast errors (invalid ObjectId, etc)
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      error: 'Invalid ID format',
+      message: err.message
+    });
+  }
+
+  // Handle other unknown errors
   res.status(500).json({
-    error: 'Internal Server Error',
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    error: 'Internal Server Error'
   });
 });
 

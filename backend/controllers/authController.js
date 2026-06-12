@@ -1,284 +1,154 @@
 const User = require('../models/User');
 const Faculty = require('../models/Faculty');
-const { auth, adminAuth } = require('../middleware/auth');
 const { getJwtSecret } = require('../utils/jwtSecret');
 const jwt = require('jsonwebtoken');
-const { normalizeEmail, resolveFacultyId, formatUserResponse } = require('../utils/helpers');
+const { normalizeEmail, formatUserResponse } = require('../utils/helpers');
+const { AppError, asyncHandler } = require('../utils/AppError');
 
-exports.setupAdmin = async (req, res) => {
-  try {
-    // Check if any admin exists
-    const adminExists = await User.findOne({ role: 'admin' });
-    if (adminExists) {
-      return res.status(400).json({ error: 'Admin user already exists' });
-    }
+exports.setupAdmin = asyncHandler(async (req, res) => {
+  const adminExists = await User.findOne({ role: 'admin' });
+  if (adminExists) throw new AppError('Admin user already exists', 400);
 
-    const { name, email, password, department, employeeId } = req.body;
-
-    if (!name || !email || !password || !employeeId) {
-      return res.status(400).json({ error: 'Required fields are missing.' });
-    }
-
-    const normalizedEmail = normalizeEmail(email);
-
-    const existingUser = await User.findOne({
-      $or: [{ email: normalizedEmail }, { employeeId }]
-    });
-
-    if (existingUser) {
-      return res.status(400).json({
-        error: 'User with this email or employee ID already exists'
-      });
-    }
-
-    const admin = new User({
-      name,
-      email: normalizedEmail,
-      password,
-      department,
-      employeeId,
-      userId: employeeId,
-      role: 'admin'
-    });
-
-    await admin.save();
-
-    res.status(201).json({
-      message: 'Admin user created successfully',
-      user: formatUserResponse(admin)
-    });
-  } catch (error) {
-    console.error('Setup admin error:', error);
-    res.status(500).json({ error: 'Server error' });
+  const { name, email, password, department, employeeId } = req.body;
+  if (!name || !email || !password || !employeeId) {
+    throw new AppError('Required fields are missing.', 400);
   }
-}
 
-exports.login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
+  const normalizedEmail = normalizeEmail(email);
+  const existingUser = await User.findOne({ $or: [{ email: normalizedEmail }, { employeeId }] });
+  if (existingUser) throw new AppError('User with this email or employee ID already exists', 400);
 
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+  const admin = new User({ name, email: normalizedEmail, password, department, employeeId, userId: employeeId, role: 'admin' });
+  await admin.save();
 
-    const normalizedEmail = normalizeEmail(email);
-    const normalizedPassword = typeof password === 'string' ? password.trim() : password;
+  res.status(201).json({ message: 'Admin user created successfully', user: formatUserResponse(admin) });
+});
 
-    // Fetch account profile matching email parameters
-    const user = await User.findOne({ email: normalizedEmail });
-    const passwordMatches = user ? await user.comparePassword(normalizedPassword) : false;
+exports.login = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) throw new AppError('Email and password are required', 400);
 
-    if (!user || !passwordMatches) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedPassword = typeof password === 'string' ? password.trim() : password;
 
-    // Safety fallback block if user account is disabled
-    if (user.isActive === false) {
-      return res.status(403).json({ error: 'Your account has been deactivated.' });
-    }
+  const user = await User.findOne({ email: normalizedEmail });
+  const passwordMatches = user ? await user.comparePassword(normalizedPassword) : false;
 
-    const token = jwt.sign(
-      { userId: user._id },
-      getJwtSecret(),
-      { expiresIn: '1h' }
-    );
+  if (!user || !passwordMatches) throw new AppError('Invalid credentials', 401);
+  if (user.isActive === false) throw new AppError('Your account has been deactivated.', 403);
 
-    res.json({
-      token,
-      user: formatUserResponse(user)
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-}
+  const token = jwt.sign({ userId: user._id }, getJwtSecret(), { expiresIn: '1h' });
 
-exports.register = async (req, res) => {
-  try {
-    const { name, email, password } = req.body;
+  res.json({ token, user: formatUserResponse(user) });
+});
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: 'Name, email, and password are required.' });
-    }
+exports.register = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) throw new AppError('Name, email, and password are required.', 400);
 
-    const normalizedEmail = normalizeEmail(email);
-    const userId = req.body.userId || `FAC-${Date.now()}`;
+  const normalizedEmail = normalizeEmail(email);
+  const userId = req.body.userId || `FAC-${Date.now()}`;
 
-    const existingUser = await User.findOne({ 
-      $or: [{ userId }, { email: normalizedEmail }] 
-    });
-    
-    if (existingUser) {
-      return res.status(400).json({ error: 'User with this email already exists.' });
-    }
+  const existingUser = await User.findOne({ $or: [{ userId }, { email: normalizedEmail }] });
+  if (existingUser) throw new AppError('User with this email already exists.', 400);
 
-    const user = new User({
-      userId,
-      name,
-      email: normalizedEmail,
-      password,
-      role: 'faculty',
-      isActive: true,
-      department: req.body.department,
-      employeeId: req.body.employeeId,
-      bankAccount: req.body.bankAccount,
-      ifscCode: req.body.ifscCode
-    });
-    
-    await user.save();
+  const user = new User({
+    userId, name, email: normalizedEmail, password, role: 'faculty', isActive: true,
+    department: req.body.department, employeeId: req.body.employeeId,
+    bankAccount: req.body.bankAccount, ifscCode: req.body.ifscCode
+  });
 
-    await Faculty.findOneAndUpdate(
-      { facultyId: userId },
-      { facultyId: userId, name, email: normalizedEmail, department: req.body.department, employeeId: req.body.employeeId },
-      { upsert: true, new: true }
-    );
+  await user.save();
 
-    res.status(201).json({ message: 'Registration successful. You can now log in.' });
-  } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-}
+  await Faculty.findOneAndUpdate(
+    { facultyId: userId },
+    { facultyId: userId, name, email: normalizedEmail, department: req.body.department, employeeId: req.body.employeeId },
+    { upsert: true, new: true }
+  );
 
-exports.getProfile = async (req, res) => {
-  try {
-    res.json({
-      user: formatUserResponse(req.user)
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-}
+  res.status(201).json({ message: 'Registration successful. You can now log in.' });
+});
 
-exports.updateProfile = async (req, res) => {
+exports.getProfile = asyncHandler(async (req, res) => {
+  res.json({ user: formatUserResponse(req.user) });
+});
+
+exports.updateProfile = asyncHandler(async (req, res) => {
   const updates = Object.keys(req.body);
   const allowedUpdates = ['name', 'password', 'bankAccount', 'ifscCode'];
   const isValidOperation = updates.every(update => allowedUpdates.includes(update));
 
-  if (!isValidOperation) {
-    return res.status(400).json({ error: 'Invalid updates' });
+  if (!isValidOperation) throw new AppError('Invalid updates', 400);
+
+  updates.forEach(update => req.user[update] = req.body[update]);
+  await req.user.save();
+
+  res.json({ message: 'Profile updated successfully', user: formatUserResponse(req.user) });
+});
+
+exports.getAllUsers = asyncHandler(async (req, res) => {
+  const users = await User.find({}, '-password');
+  res.json(users);
+});
+
+exports.changeUserStatus = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new AppError('User not found', 404);
+  if (typeof req.body.isActive !== 'boolean') throw new AppError('isActive must be a boolean value', 400);
+
+  user.isActive = req.body.isActive;
+  await user.save();
+
+  res.json({ message: 'User status updated successfully', user: { id: user._id, name: user.name, email: user.email, role: user.role, isActive: user.isActive } });
+});
+
+exports.forgotPassword = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  if (!email) throw new AppError('Email is required', 400);
+
+  const normalizedEmail = normalizeEmail(email);
+  const user = await User.findOne({ email: normalizedEmail });
+
+  if (!user) {
+    return res.json({ message: 'If that email exists, a password reset link has been generated.' });
   }
 
-  try {
-    updates.forEach(update => req.user[update] = req.body[update]);
-    await req.user.save();
+  const crypto = require('crypto');
+  const resetToken = crypto.randomBytes(32).toString('hex');
 
-    res.json({
-      message: 'Profile updated successfully',
-      user: formatUserResponse(req.user)
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-}
+  user.resetPasswordToken = resetToken;
+  user.resetPasswordExpires = Date.now() + 3600000;
+  await user.save();
 
-exports.getAllUsers = async (req, res) => {
-  try {
-    const users = await User.find({}, '-password');
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-}
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+  const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-exports.changeUserStatus = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+  const sendEmail = require('../utils/email');
+  await sendEmail({
+    email: user.email,
+    subject: 'PG Exam Portal - Password Reset',
+    message: `Hello ${user.name},\n\nYou requested a password reset. Please click on the link below (or copy and paste it into your browser) to reset your password:\n\n${resetUrl}\n\nThis link is valid for 1 hour. If you did not make this request, you can safely ignore this email.\n\nBest regards,\nPG Exam Portal Team`
+  });
 
-    if (typeof req.body.isActive !== 'boolean') {
-      return res.status(400).json({ error: 'isActive must be a boolean value' });
-    }
+  res.json({ message: 'If that email exists, a password reset link has been generated.' });
+});
 
-    user.isActive = req.body.isActive;
-    await user.save();
+exports.resetPassword = asyncHandler(async (req, res) => {
+  const { token } = req.params;
+  const { password } = req.body;
+  if (!password) throw new AppError('New password is required', 400);
 
-    res.json({
-      message: 'User status updated successfully',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  }
-}
+  const user = await User.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: Date.now() }
+  });
 
-exports.forgotPassword = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
+  if (!user) throw new AppError('Password reset token is invalid or has expired.', 400);
 
-    const normalizedEmail = normalizeEmail(email);
-    const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
-      // Return 200 for security, preventing account enumeration
-      return res.json({ message: 'If that email exists, a password reset link has been generated.' });
-    }
+  user.password = password;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  await user.save();
 
-    // Generate secure random token
-    const crypto = require('crypto');
-    const resetToken = crypto.randomBytes(32).toString('hex');
-
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
-
-    await user.save();
-
-    // Reset Link URL (forces port 3000 for frontend dev server)
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
-
-    const sendEmail = require('../utils/email');
-    await sendEmail({
-      email: user.email,
-      subject: 'PG Exam Portal - Password Reset',
-      message: `Hello ${user.name},\n\nYou requested a password reset. Please click on the link below (or copy and paste it into your browser) to reset your password:\n\n${resetUrl}\n\nThis link is valid for 1 hour. If you did not make this request, you can safely ignore this email.\n\nBest regards,\nPG Exam Portal Team`
-    });
-
-    res.json({ message: 'If that email exists, a password reset link has been generated.' });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-}
-
-exports.resetPassword = async (req, res) => {
-  try {
-    const { token } = req.params;
-    const { password } = req.body;
-
-    if (!password) {
-      return res.status(400).json({ error: 'New password is required' });
-    }
-
-    const user = await User.findOne({
-      resetPasswordToken: token,
-      resetPasswordExpires: { $gt: Date.now() }
-    });
-
-    if (!user) {
-      return res.status(400).json({ error: 'Password reset token is invalid or has expired.' });
-    }
-
-    // Update password (pre-save hook will hash it)
-    user.password = password;
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpires = undefined;
-
-    await user.save();
-
-    res.json({ message: 'Password reset successful. You can now log in with your new password.' });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Server error' });
-  }
-} 
+  res.json({ message: 'Password reset successful. You can now log in with your new password.' });
+});

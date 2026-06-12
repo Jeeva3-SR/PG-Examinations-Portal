@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import api from '../../lib/api';
-import AdvanceClaimLetter from '../../components/AdvanceClaimLetter';
-import ReleaseClaimLetterHOD from '../../components/ReleaseClaimLetterHOD';
+import AdvanceClaimLetter from '../../components/letters/AdvanceClaimLetter';
+import ReleaseClaimLetterHOD from '../../components/letters/ReleaseClaimLetterHOD';
 
 const FinalReports = () => {
   const [loading, setLoading] = useState(false);

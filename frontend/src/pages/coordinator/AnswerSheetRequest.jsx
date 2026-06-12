@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import ReleaseClaimLetter from '../../components/ReleaseClaimLetter';
+import ReleaseClaimLetter from '../../components/letters/ReleaseClaimLetter';
 
 
 const AnswerSheetRequest = () => {

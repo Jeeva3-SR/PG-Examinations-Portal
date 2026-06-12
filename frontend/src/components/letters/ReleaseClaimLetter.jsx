@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import api from '../lib/api';
+import api from '../../lib/api';
 import jsPDF from 'jspdf';
 // import { useNavigate } from 'react-router-dom';
 
