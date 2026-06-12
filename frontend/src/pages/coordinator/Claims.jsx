@@ -3,7 +3,7 @@ import api from '../../lib/api';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 
 const dutyTypeOptions = [
@@ -123,20 +123,20 @@ const Claims = () => {
 
   return (
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Faculty Exam Duty Claims
-          </motion.h1>
+          </m.h1>
           <div className="mb-4 flex items-center gap-4">
             <input
               type="text"
@@ -222,7 +222,7 @@ const Claims = () => {
               Generate Settlement PDF
             </Link>
           </div>
-        </motion.div>
+        </m.div>
       </div>
   );
 };

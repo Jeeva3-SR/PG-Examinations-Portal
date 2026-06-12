@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calendar, Clock, Building2, Users, AlertCircle, UserPlus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -146,21 +146,21 @@ const SeatingArrangement = () => {
 
   return (
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Seating Arrangement
-          </motion.h1>
-          <motion.div
+          </m.h1>
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -285,8 +285,8 @@ const SeatingArrangement = () => {
                 </button>
               </>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
   );
 };

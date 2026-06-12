@@ -24,15 +24,9 @@ const resolveCourseReference = async (ref) => {
 };
 
 const resolveCourseReferences = async (refs = []) => {
-  const resolved = [];
   const results = await Promise.all(refs.map(ref => resolveCourseReference(ref)));
-  for (const courseId of results) {
-    const courseIdString = toIdString(courseId);
-    if (courseIdString && !resolved.includes(courseIdString)) {
-      resolved.push(courseIdString);
-    }
-  }
-  return resolved;
+  const resolvedSet = new Set(results.map(courseId => toIdString(courseId)).filter(Boolean));
+  return [...resolvedSet];
 };
 
 const buildProfileResponse = async (facultyDoc) => {

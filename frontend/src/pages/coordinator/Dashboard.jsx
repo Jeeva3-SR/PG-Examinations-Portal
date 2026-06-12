@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Users,
   Calendar,
@@ -126,14 +126,14 @@ const Dashboard = () => {
           </h3>
         </div>
 
-        <motion.div
+        <m.div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {modules.map((module) => (
-            <motion.div
+            <m.div
               key={module.path}
               variants={itemVariants}
               whileHover={{ scale: 1.01, y: -2 }}
@@ -164,9 +164,9 @@ const Dashboard = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );

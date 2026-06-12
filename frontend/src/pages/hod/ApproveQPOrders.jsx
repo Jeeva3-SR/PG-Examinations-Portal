@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
@@ -288,14 +288,14 @@ const ApproveQPOrders = () => {
       {/* Toast Notification Bar */}
       <AnimatePresence>
         {toast && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: -20, x: '-50%' }} 
             animate={{ opacity: 1, y: 0, x: '-50%' }} 
             exit={{ opacity: 0, y: -20, x: '-50%' }}
             className="fixed top-4 left-1/2 z-50 bg-slate-900 border border-slate-800 text-slate-100 px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold tracking-wide"
           >
             {toast}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -307,7 +307,7 @@ const ApproveQPOrders = () => {
         </div>
 
         {selectedOrders.length > 0 && (
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
             className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1.5 rounded-xl self-start sm:self-auto"
           >
             <span className="text-xs font-bold px-2 text-slate-500 font-mono">{selectedOrders.length} Chosen</span>
@@ -323,7 +323,7 @@ const ApproveQPOrders = () => {
             >
               <X size={13} /> Reject
             </button>
-          </motion.div>
+          </m.div>
         )}
       </div>
 
@@ -363,7 +363,7 @@ const ApproveQPOrders = () => {
                   const backupAssignment = assignedQPSetters.find(a => a.subject === (courseData.courseName || order.courseName));
 
                   return (
-                    <motion.tr 
+                    <m.tr 
                       key={order._id} 
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -464,7 +464,7 @@ const ApproveQPOrders = () => {
                           )}
                         </div>
                       </td>
-                    </motion.tr>
+                    </m.tr>
                   );
                 })}
               </tbody>
@@ -481,7 +481,7 @@ const ApproveQPOrders = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
             
             {/* Soft Backdrop Overlay Mask */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -490,7 +490,7 @@ const ApproveQPOrders = () => {
             />
 
             {/* Main Centered Document Frame */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
@@ -542,7 +542,7 @@ const ApproveQPOrders = () => {
                 </div>
               )}
 
-            </motion.div>
+            </m.div>
           </div>
         )}
       </AnimatePresence>

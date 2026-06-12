@@ -1,5 +1,6 @@
   import React, { useEffect } from 'react';
   import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+  import { LazyMotion, domAnimation } from 'framer-motion';
   import useAuthStore from './store/useAuthStore';
 
   import Dashboard from './pages/coordinator/Dashboard';
@@ -132,9 +133,11 @@
   };
 
   const App = () => (
-    <Router>
-      <AppContent />
-    </Router>
+    <LazyMotion features={domAnimation}>
+      <Router>
+        <AppContent />
+      </Router>
+    </LazyMotion>
   );
 
   export default App;

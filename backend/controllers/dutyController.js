@@ -85,6 +85,15 @@ exports.generate = async (req, res) => {
     let shuffledOtherFaculty = shuffle([...allFaculty]);
     let otherFacultyIdx = 0;
 
+    const facultyByCourseCode = new Map();
+    for (const f of allFaculty) {
+      if (f.courseCode) {
+        const key = f.courseCode.toUpperCase();
+        if (!facultyByCourseCode.has(key)) facultyByCourseCode.set(key, []);
+        facultyByCourseCode.get(key).push(f);
+      }
+    }
+
     for (const room of seatingArrangements) {
       const studentCount = room.students.length;
       const invigilatorCount = Math.ceil(studentCount / 30);
@@ -92,7 +101,7 @@ exports.generate = async (req, res) => {
       const uniqueCourseCodes = [...new Set(room.students.map(s => s.courseCode && s.courseCode.toUpperCase()).filter(Boolean))];
 
       for (const code of uniqueCourseCodes) {
-        const handlingFaculty = allFaculty.find(f => !assignedFacultyIds.has(f.facultyId) && f.courseCode && f.courseCode.toUpperCase() === code);
+        const handlingFaculty = (facultyByCourseCode.get(code) || []).find(f => !assignedFacultyIds.has(f.facultyId));
         if (handlingFaculty) {
           duties.push(new Duty({
             facultyId: handlingFaculty.facultyId,
