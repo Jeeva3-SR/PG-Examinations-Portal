@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import useAuthStore from '../../store/useAuthStore';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 const RoomManagement = () => {
   const [rooms, setRooms] = useState([]);
@@ -62,7 +62,7 @@ const RoomManagement = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto p-6">
+    <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Room Management</h1>
       <p className="text-gray-500 mb-6">Add, edit, and remove examination rooms</p>
 
@@ -137,7 +137,7 @@ const RoomManagement = () => {
           </div>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

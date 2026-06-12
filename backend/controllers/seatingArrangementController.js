@@ -63,11 +63,12 @@ exports.generateFromExcel = async (req, res) => {
         const workbook = XLSX.read(buffer, { type: 'buffer' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        return data.map(row => {
+        return data.flatMap(row => {
           const regNo = row['Register Number'] || row['Reg No'] || row['RegNo'] || row['Reg. No'] || row['Roll Number'] || row['RollNo'] || Object.values(row)[0] || '';
           const name = row['Name'] || row['Student Name'] || row['StudentName'] || row['Student'] || Object.values(row)[1] || '';
-          return { regNo: String(regNo).trim(), name: String(name).trim(), category: f.label };
-        }).filter(s => s.regNo);
+          const trimmedRegNo = String(regNo).trim();
+          return trimmedRegNo ? [{ regNo: trimmedRegNo, name: String(name).trim(), category: f.label }] : [];
+        });
       } catch (e) {
         console.warn(`Skipping field ${f.label}: ${e.message}`);
         return [];

@@ -24,26 +24,22 @@ const resolveCourseReference = async (ref) => {
 };
 
 const resolveCourseReferences = async (refs = []) => {
-  const resolved = [];
   const results = await Promise.all(refs.map(ref => resolveCourseReference(ref)));
-  for (const courseId of results) {
-    const courseIdString = toIdString(courseId);
-    if (courseIdString && !resolved.includes(courseIdString)) {
-      resolved.push(courseIdString);
-    }
-  }
-  return resolved;
+  const resolvedSet = new Set(results.flatMap(courseId => { const id = toIdString(courseId); return id ? [id] : []; }));
+  return [...resolvedSet];
 };
 
 const buildProfileResponse = async (facultyDoc) => {
   const faculty = facultyDoc?.toObject ? facultyDoc.toObject() : facultyDoc;
-  const resolvedCourses = await resolveCourseReferences(faculty.courses || []);
-  const resolvedClasses = await Promise.all((faculty.classesHandled || []).map(async (cls) => ({
-    semester: cls.semester || '',
-    section: cls.section || '',
-    year: cls.year || '',
-    course: toIdString(await resolveCourseReference(cls.course))
-  })));
+  const [resolvedCourses, resolvedClasses] = await Promise.all([
+    resolveCourseReferences(faculty.courses || []),
+    Promise.all((faculty.classesHandled || []).map(async (cls) => ({
+      semester: cls.semester || '',
+      section: cls.section || '',
+      year: cls.year || '',
+      course: toIdString(await resolveCourseReference(cls.course))
+    })))
+  ]);
 
   return {
     ...faculty,

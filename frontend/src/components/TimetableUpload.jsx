@@ -1,6 +1,11 @@
 import React, { useState, useRef } from 'react';
 import api from '../lib/api';
 
+const handleDragOver = (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+};
+
 const TimetableUpload = ({ onUploadSuccess }) => {
   const [file, setFile] = useState(null);
   const [success, setSuccess] = useState('');
@@ -74,11 +79,6 @@ const TimetableUpload = ({ onUploadSuccess }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
   };
 
   const handleDrop = (e) => {

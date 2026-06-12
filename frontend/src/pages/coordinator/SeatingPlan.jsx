@@ -2,7 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../../lib/api';
 import useAuthStore from '../../store/useAuthStore';
 import { useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
+
+const handlePrint = () => {
+  window.print();
+};
 
 const CATEGORY_COLORS = {
   'CEG Regular': { bg: '#e0f2fe', border: '#0284c7', text: '#0369a1' },
@@ -19,17 +23,17 @@ const SeatCard = ({ student, number }) => {
         width: 130, height: 56, border: `2px solid ${colors.border}`,
         borderRadius: 6, backgroundColor: colors.bg, display: 'flex',
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '2px 4px', fontSize: 11, position: 'relative',
+        padding: '2px 4px', fontSize: 12, position: 'relative',
       }}
     >
-      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 9, color: '#94a3b8' }}>
+      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 12, color: '#94a3b8' }}>
         #{number}
       </span>
       <span style={{ fontWeight: 600, fontSize: 12, color: colors.text, lineHeight: 1.2 }}>
         {student.regNo}
       </span>
       {student.name && (
-        <span style={{ fontSize: 9, color: '#64748b', lineHeight: 1.1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {student.name}
         </span>
       )}
@@ -149,10 +153,6 @@ const SeatingPlan = () => {
     setLoadingRooms(false);
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   if (!entryId) {
     return (
       <div className="max-w-2xl mx-auto p-6 text-center">
@@ -171,7 +171,7 @@ const SeatingPlan = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Seating Plan</h1>
         <p className="text-gray-500 mb-6">Configure rooms and generate a visual seating plan from uploaded student lists</p>
 
@@ -298,7 +298,7 @@ const SeatingPlan = () => {
             .print\\:hidden { display: none !important; }
           }
         `}</style>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

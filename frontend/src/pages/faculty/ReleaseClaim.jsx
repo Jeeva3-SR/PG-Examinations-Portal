@@ -1,10 +1,10 @@
 import React from 'react';
 
-const ReleaseClaim = () => {
-  const handleRequestClaim = () => {
-    alert('Release claim request sent successfully.');
-  };
+const handleRequestClaim = () => {
+  alert('Release claim request sent successfully.');
+};
 
+const ReleaseClaim = () => {
   return (
     <div className="bg-white rounded-lg shadow p-6 max-w-2xl mx-auto">
       <h2 className="text-2xl font-bold mb-6">Request Release Claim</h2>

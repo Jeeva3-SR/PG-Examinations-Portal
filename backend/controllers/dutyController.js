@@ -85,14 +85,36 @@ exports.generate = async (req, res) => {
     let shuffledOtherFaculty = shuffle([...allFaculty]);
     let otherFacultyIdx = 0;
 
+    const facultyByCourseCode = new Map();
+    for (const f of allFaculty) {
+      if (f.courseCode) {
+        const key = f.courseCode.toUpperCase();
+        if (!facultyByCourseCode.has(key)) facultyByCourseCode.set(key, []);
+        facultyByCourseCode.get(key).push(f);
+      }
+    }
+    const courseCodeIndexes = new Map();
+    for (const [code] of facultyByCourseCode) {
+      courseCodeIndexes.set(code, 0);
+    }
+
     for (const room of seatingArrangements) {
       const studentCount = room.students.length;
       const invigilatorCount = Math.ceil(studentCount / 30);
       let assignedCount = 0;
-      const uniqueCourseCodes = [...new Set(room.students.map(s => s.courseCode && s.courseCode.toUpperCase()).filter(Boolean))];
+      const uniqueCourseCodes = [...new Set(room.students.flatMap(s => { const code = s.courseCode; return code ? [code.toUpperCase()] : []; }))];
 
       for (const code of uniqueCourseCodes) {
-        const handlingFaculty = allFaculty.find(f => !assignedFacultyIds.has(f.facultyId) && f.courseCode && f.courseCode.toUpperCase() === code);
+        const facultyList = facultyByCourseCode.get(code) || [];
+        let handlingFaculty = null;
+        const startIdx = courseCodeIndexes.get(code) || 0;
+        for (let i = startIdx; i < facultyList.length; i++) {
+          if (!assignedFacultyIds.has(facultyList[i].facultyId)) {
+            handlingFaculty = facultyList[i];
+            courseCodeIndexes.set(code, i + 1);
+            break;
+          }
+        }
         if (handlingFaculty) {
           duties.push(new Duty({
             facultyId: handlingFaculty.facultyId,

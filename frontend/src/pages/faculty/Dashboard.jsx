@@ -1,27 +1,26 @@
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
-const FacultyDashboard = () => {
-  const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const facultyName = user?.name || 'Faculty Member';
-  const facultyId = user?.facultyId || '';
-  const dept = user?.department || 'Academic Department';
-
-  // Professional metric panels data config
-  const summaryMetrics = [
+const summaryMetrics = [
     { label: "Assigned Courses", value: "02", color: "text-indigo-600 bg-indigo-50 border-indigo-100", icon: "📚", path: "/faculty/assigned-courses" },
     { label: "Active QP Orders", value: "01", color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: "📄", path: "/faculty/qp-orders" },
     { label: "Invigilation Duties", value: "04", color: "text-amber-600 bg-amber-50 border-amber-100", icon: "👥", path: "/faculty/invigilation-duty" },
   ];
 
-  const quickActions = [
+const quickActions = [
     { title: "Maintain Profile Parameters", desc: "Update your official academic bio, payment matrix tiers, and core expertise sectors.", icon: "📝", path: "/faculty/update-profile" },
     { title: "Evaluator Status Indicators", desc: "Access central answer script delivery requests and validation assignments.", icon: "🎯", path: "/faculty/evaluator-details" },
     { title: "All Faculties", desc: "View complete list of faculty members across the institution.", icon: "👨‍🏫", path: "/faculty/all-faculties" },
     { title: "All Subjects", desc: "Browse master list of all courses and subjects offered.", icon: "📖", path: "/faculty/all-subjects" },
     { title: "Release Financial Claims", desc: "Process outstanding monetary settlement profiles for completed examinations.", icon: "💸", path: "/faculty/release-claim" },
   ];
+
+const FacultyDashboard = () => {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const facultyName = user?.name || 'Faculty Member';
+  const facultyId = user?.facultyId || '';
+  const dept = user?.department || 'Academic Department';
 
   return (
     <div className="space-y-8 animate-fadeIn">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../lib/api';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import TimetableUpload from '../../components/TimetableUpload';
 
@@ -76,7 +76,7 @@ const SessionView = () => {
       <div className="min-h-screen bg-gradient-to-tr from-slate-100 to-blue-50 font-sans">
         <div className="max-w-6xl mx-auto p-6">
           <div className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl">
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -88,17 +88,17 @@ const SessionView = () => {
               <p className="text-slate-900 text-lg">
                 Upload and manage examination timetables
               </p>
-            </motion.div>
+            </m.div>
 
             {/* Upload Section */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15, duration: 0.5, ease: 'easeOut' }}
               className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
             >
               <TimetableUpload onUploadSuccess={fetchSessions} />
-            </motion.div>
+            </m.div>
 
             <div className="mb-6 p-4 bg-white rounded-lg shadow">
               <h2 className="text-xl font-semibold mb-2">Add New Session</h2>
@@ -166,7 +166,7 @@ const SessionView = () => {
             </div>
 
             {/* Table Section */}
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
@@ -238,7 +238,7 @@ const SessionView = () => {
                   </table>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           </div>
         </div>
       </div>

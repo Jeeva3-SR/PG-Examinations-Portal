@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
+const handleSendToFaculty = (orderId) => {
+  alert('Letter sent to faculty!');
+};
 
 const AssignQPSetter = () => {
   const [courses, setCourses] = useState([]);
@@ -134,28 +137,23 @@ const AssignQPSetter = () => {
     );
   };
 
-  const handleSendToFaculty = (orderId) => {
-    // Placeholder: implement actual send logic (e.g., email, notification)
-    alert('Letter sent to faculty!');
-  };
-
   return (
 
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Assign QP Setters
-          </motion.h1>
+          </m.h1>
 
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -310,7 +308,7 @@ const AssignQPSetter = () => {
               </div>
             )}
           </div>
-        </motion.div>
+        </m.div>
       </div>
   );
 };

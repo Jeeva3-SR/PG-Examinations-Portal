@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../lib/api';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, UserCheck } from 'lucide-react';
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return `${day}-${month}-${year}`;
+};
 
 const DutyAssignment = () => {
     const [searchParams] = useSearchParams();
@@ -155,12 +161,6 @@ const DutyAssignment = () => {
         }
     };
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        const [year, month, day] = dateStr.split('T')[0].split('-');
-        return `${day}-${month}-${year}`;
-    };
-
     const getDutiesForRoom = (room) => {
         if (!selectedDateSession) return [];
         let session;
@@ -170,7 +170,7 @@ const DutyAssignment = () => {
 
     return (
         <div className="max-w-6xl mx-auto p-6">
-            <motion.div
+            <m.div
                 initial={{ opacity: 0, y: 24 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -215,7 +215,7 @@ const DutyAssignment = () => {
                             const roomDuties = getDutiesForRoom(room);
                             const studentCount = roomStudentCount[room] || 0;
                             return (
-                                <motion.div
+                                <m.div
                                     key={room}
                                     initial={{ opacity: 0, y: 12 }}
                                     animate={{ opacity: 1, y: 0 }}
@@ -280,14 +280,14 @@ const DutyAssignment = () => {
                                             </button>
                                         </div>
                                     </div>
-                                </motion.div>
+                                </m.div>
                             );
                         })}
                     </div>
                 )}
 
                 {/* All Assigned Duties Table */}
-                <motion.div
+                <m.div
                     initial={{ opacity: 0, y: 24 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.5, ease: 'easeOut' }}
@@ -389,8 +389,8 @@ const DutyAssignment = () => {
                             </tbody>
                         </table>
                     </div>
-                </motion.div>
-            </motion.div>
+                </m.div>
+            </m.div>
         </div>
     );
 };

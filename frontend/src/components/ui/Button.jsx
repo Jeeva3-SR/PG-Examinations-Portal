@@ -1,7 +1,7 @@
 import React from 'react';
 import { cva } from 'class-variance-authority';
 import { cn } from '../../lib/utils';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50',
@@ -31,7 +31,7 @@ const buttonVariants = cva(
 const Button = React.forwardRef(
   ({ className, variant, size, children, ...props }, ref) => {
     return (
-      <motion.button
+      <m.button
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className={cn(buttonVariants({ variant, size, className }))}
@@ -39,7 +39,7 @@ const Button = React.forwardRef(
         {...props}
       >
         {children}
-      </motion.button>
+      </m.button>
     );
   }
 );

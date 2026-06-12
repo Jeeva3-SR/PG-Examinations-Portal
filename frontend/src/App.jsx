@@ -1,5 +1,6 @@
   import React, { useEffect } from 'react';
   import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+  import { LazyMotion, domAnimation } from 'framer-motion';
   import useAuthStore from './store/useAuthStore';
 
   import Dashboard from './pages/coordinator/Dashboard';
@@ -49,13 +50,13 @@
   import AllFaculties from './pages/AllFaculties';
   import AllSubjects from './pages/AllSubjects';
 
+  const publicRoutes = ['/', '/login', '/hod/login', '/about', '/forgot-password'];
+
   const AppContent = () => {
     const location = useLocation();
     const hydrate = useAuthStore((s) => s.hydrate);
 
     useEffect(() => { hydrate(); }, [hydrate]);
-
-    const publicRoutes = ['/', '/login', '/hod/login', '/about', '/forgot-password'];
     const isFullWidthPage = 
       publicRoutes.includes(location.pathname) || 
       location.pathname === '/faculty/register' ||
@@ -132,9 +133,11 @@
   };
 
   const App = () => (
-    <Router>
-      <AppContent />
-    </Router>
+    <LazyMotion features={domAnimation}>
+      <Router>
+        <AppContent />
+      </Router>
+    </LazyMotion>
   );
 
   export default App;

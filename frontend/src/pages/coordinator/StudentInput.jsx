@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import useAuthStore from '../../store/useAuthStore';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+
+const parseCount = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  const parsed = parseInt(value);
+  return isNaN(parsed) ? 0 : parsed;
+};
 
 const StudentInput = () => {
   const navigate = useNavigate();
@@ -134,15 +142,6 @@ const StudentInput = () => {
       ...prev,
       [name]: value
     }));
-  };
-
-  // Helper function to convert null/empty values to 0
-  const parseCount = (value) => {
-    if (value === null || value === undefined || value === '') {
-      return 0;
-    }
-    const parsed = parseInt(value);
-    return isNaN(parsed) ? 0 : parsed;
   };
 
   const handleEditClick = (entry) => {
@@ -292,7 +291,7 @@ const StudentInput = () => {
   return (
     <>
       <div className="max-w-4xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -300,9 +299,9 @@ const StudentInput = () => {
         >
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Student Input</h1>
           <p className="text-gray-600">Enter student counts for each category</p>
-        </motion.div>
+        </m.div>
 
-        <motion.form
+        <m.form
           onSubmit={handleSubmit}
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -480,9 +479,9 @@ const StudentInput = () => {
               {editingId ? 'Update' : 'Submit'}
             </button>
           </div>
-        </motion.form>
+        </m.form>
 
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
@@ -544,7 +543,7 @@ const StudentInput = () => {
             </div>
           </div>
         )}
-        </motion.div>
+        </m.div>
       </div>
 
       {uploadModalEntry && (

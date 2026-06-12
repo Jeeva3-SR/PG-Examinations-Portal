@@ -1,13 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../../store/useAuthStore';
 
-const HODDashboard = () => {
-  const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const hodName = user?.name || 'Department Head';
-  const deptName = user?.department || 'Academic Division';
-
-  const quickActions = [
+const quickActions = [
     { title: "Approve QP Order Letters", desc: "Review, sign off on, and dispatch official question paper compilation requests to assigned faculty panels.", icon: "📋", path: "/hod/approve-qporders" },
     { title: "Department Sign-Off Terminal", desc: "Digitally sign off, validate, and close out exam registration lists and session packets.", icon: "✅", path: "/hod/signoff" },
     { title: "All Faculties", desc: "View complete list of faculty members across the institution.", icon: "👨‍🏫", path: "/hod/all-faculties" },
@@ -15,13 +9,19 @@ const HODDashboard = () => {
     { title: "Reset Portal Password", desc: "Maintain and update your department's local secure authentication credentials.", icon: "🔑", path: "/hod/reset-password" },
   ];
 
-  const analyticsMetrics = [
+const analyticsMetrics = [
     { label: "Consolidated Sessions", value: "14", color: "text-indigo-600 bg-indigo-50 border-indigo-100", icon: "📊", path: "/hod/consolidated-sessions" },
     { label: "QP Setting Matrix", value: "08", color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: "👥", path: "/hod/assign-qpsetter" },
     { label: "Pending Letters", value: "03", color: "text-amber-600 bg-amber-50 border-amber-100", icon: "📈", path: "/hod/letters" },
     { label: "All Faculties", value: "-", color: "text-sky-600 bg-sky-50 border-sky-100", icon: "👨‍🏫", path: "/hod/all-faculties" },
     { label: "All Subjects", value: "-", color: "text-violet-600 bg-violet-50 border-violet-100", icon: "📖", path: "/hod/all-subjects" },
   ];
+
+const HODDashboard = () => {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const hodName = user?.name || 'Department Head';
+  const deptName = user?.department || 'Academic Division';
 
   return (
     <div className="space-y-8 animate-fadeIn text-left">

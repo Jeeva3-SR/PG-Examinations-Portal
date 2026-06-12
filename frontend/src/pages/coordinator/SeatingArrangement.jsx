@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calendar, Clock, Building2, Users, AlertCircle, UserPlus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -16,6 +16,32 @@ import {
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+const sessionOptions = [
+  { value: 'FN', label: 'FN' },
+  { value: 'AN', label: 'AN' }
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
+
 const SeatingArrangement = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState('');
@@ -26,11 +52,6 @@ const SeatingArrangement = () => {
   const [arrangements, setArrangements] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const sessionOptions = [
-    { value: 'FN', label: 'FN' },
-    { value: 'AN', label: 'AN' }
-  ];
 
   useEffect(() => {
     fetchRooms();
@@ -123,44 +144,23 @@ const SeatingArrangement = () => {
     doc.save('seating-arrangement.pdf');
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3
-      }
-    }
-  };
-
   return (
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Seating Arrangement
-          </motion.h1>
-          <motion.div
+          </m.h1>
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -285,8 +285,8 @@ const SeatingArrangement = () => {
                 </button>
               </>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
   );
 };
