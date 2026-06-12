@@ -56,22 +56,25 @@ exports.generateFromExcel = async (req, res) => {
     ];
 
     let allStudents = [];
-    for (const f of fields) {
-      if (entry[f.status] !== 'uploaded' || !entry[f.key]) continue;
+    const uploadedFields = fields.filter(f => entry[f.status] === 'uploaded' && entry[f.key]);
+    const results = await Promise.all(uploadedFields.map(async (f) => {
       try {
         const buffer = await getFileBuffer(entryId, f.status);
         const workbook = XLSX.read(buffer, { type: 'buffer' });
         const sheet = workbook.Sheets[workbook.SheetNames[0]];
         const data = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        const students = data.map(row => {
+        return data.map(row => {
           const regNo = row['Register Number'] || row['Reg No'] || row['RegNo'] || row['Reg. No'] || row['Roll Number'] || row['RollNo'] || Object.values(row)[0] || '';
           const name = row['Name'] || row['Student Name'] || row['StudentName'] || row['Student'] || Object.values(row)[1] || '';
           return { regNo: String(regNo).trim(), name: String(name).trim(), category: f.label };
         }).filter(s => s.regNo);
-        allStudents.push(...students);
       } catch (e) {
         console.warn(`Skipping field ${f.label}: ${e.message}`);
+        return [];
       }
+    }));
+    for (const students of results) {
+      allStudents.push(...students);
     }
 
     if (!allStudents.length) {

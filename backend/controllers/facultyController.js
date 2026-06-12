@@ -25,8 +25,8 @@ const resolveCourseReference = async (ref) => {
 
 const resolveCourseReferences = async (refs = []) => {
   const resolved = [];
-  for (const ref of refs) {
-    const courseId = await resolveCourseReference(ref);
+  const results = await Promise.all(refs.map(ref => resolveCourseReference(ref)));
+  for (const courseId of results) {
     const courseIdString = toIdString(courseId);
     if (courseIdString && !resolved.includes(courseIdString)) {
       resolved.push(courseIdString);
@@ -38,16 +38,12 @@ const resolveCourseReferences = async (refs = []) => {
 const buildProfileResponse = async (facultyDoc) => {
   const faculty = facultyDoc?.toObject ? facultyDoc.toObject() : facultyDoc;
   const resolvedCourses = await resolveCourseReferences(faculty.courses || []);
-  const resolvedClasses = [];
-
-  for (const cls of faculty.classesHandled || []) {
-    resolvedClasses.push({
-      semester: cls.semester || '',
-      section: cls.section || '',
-      year: cls.year || '',
-      course: toIdString(await resolveCourseReference(cls.course))
-    });
-  }
+  const resolvedClasses = await Promise.all((faculty.classesHandled || []).map(async (cls) => ({
+    semester: cls.semester || '',
+    section: cls.section || '',
+    year: cls.year || '',
+    course: toIdString(await resolveCourseReference(cls.course))
+  })));
 
   return {
     ...faculty,
