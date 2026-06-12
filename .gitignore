@@ -31,6 +31,10 @@ out/
 .docusaurus/
 
 # Server-side / TypeScript compilation outputs
+<<<<<<< HEAD
+=======
+
+>>>>>>> aee84312dcc2a53bf4a16cf4352fdc547c1bb431
 artifacts/
 
 # ==========================================
