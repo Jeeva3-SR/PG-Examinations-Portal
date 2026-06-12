@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
 const AllFaculties = () => {
   const [users, setUsers] = useState([]);
@@ -8,10 +8,7 @@ const AllFaculties = () => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('/api/users', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get('/api/users');
         setUsers(res.data.filter(u => u.role === 'faculty'));
       } catch {} finally {
         setLoading(false);

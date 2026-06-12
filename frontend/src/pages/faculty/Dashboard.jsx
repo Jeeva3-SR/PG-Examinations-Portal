@@ -1,40 +1,26 @@
-import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../../store/useAuthStore';
 
-const FacultyDashboard = () => {
-  const navigate = useNavigate();
-  const [facultyName, setFacultyName] = useState('Faculty Member');
-  const [facultyId, setFacultyId] = useState('');
-  const [dept, setDept] = useState('Academic Department');
-
-  useEffect(() => {
-    const loggedInFaculty = localStorage.getItem('loggedInFaculty');
-    if (loggedInFaculty) {
-      try {
-        const data = JSON.parse(loggedInFaculty);
-        if (data.name) setFacultyName(data.name);
-        if (data.facultyId) setFacultyId(data.facultyId);
-        if (data.department) setDept(data.department);
-      } catch (e) {
-        console.error("Failed parsing profile data cache", e);
-      }
-    }
-  }, []);
-
-  // Professional metric panels data config
-  const summaryMetrics = [
+const summaryMetrics = [
     { label: "Assigned Courses", value: "02", color: "text-indigo-600 bg-indigo-50 border-indigo-100", icon: "📚", path: "/faculty/assigned-courses" },
     { label: "Active QP Orders", value: "01", color: "text-emerald-600 bg-emerald-50 border-emerald-100", icon: "📄", path: "/faculty/qp-orders" },
     { label: "Invigilation Duties", value: "04", color: "text-amber-600 bg-amber-50 border-amber-100", icon: "👥", path: "/faculty/invigilation-duty" },
   ];
 
-  const quickActions = [
+const quickActions = [
     { title: "Maintain Profile Parameters", desc: "Update your official academic bio, payment matrix tiers, and core expertise sectors.", icon: "📝", path: "/faculty/update-profile" },
     { title: "Evaluator Status Indicators", desc: "Access central answer script delivery requests and validation assignments.", icon: "🎯", path: "/faculty/evaluator-details" },
     { title: "All Faculties", desc: "View complete list of faculty members across the institution.", icon: "👨‍🏫", path: "/faculty/all-faculties" },
     { title: "All Subjects", desc: "Browse master list of all courses and subjects offered.", icon: "📖", path: "/faculty/all-subjects" },
     { title: "Release Financial Claims", desc: "Process outstanding monetary settlement profiles for completed examinations.", icon: "💸", path: "/faculty/release-claim" },
   ];
+
+const FacultyDashboard = () => {
+  const navigate = useNavigate();
+  const user = useAuthStore((s) => s.user);
+  const facultyName = user?.name || 'Faculty Member';
+  const facultyId = user?.facultyId || '';
+  const dept = user?.department || 'Academic Department';
 
   return (
     <div className="space-y-8 animate-fadeIn">
@@ -56,7 +42,7 @@ const FacultyDashboard = () => {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {summaryMetrics.map((metric, i) => (
           <div 
-            key={i} 
+            key={metric.label} 
             onClick={() => navigate(metric.path)}
             className="bg-white border border-slate-100 p-6 rounded-2xl shadow-sm flex items-center justify-between cursor-pointer hover:shadow-md hover:border-slate-200 transition-all group"
           >
@@ -81,7 +67,7 @@ const FacultyDashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {quickActions.map((action, idx) => (
             <div 
-              key={idx}
+              key={action.title}
               onClick={() => navigate(action.path)}
               className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer group hover:-translate-y-1 flex flex-col justify-between"
             >

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
+import { m } from 'framer-motion';
 
 const RoomManagement = () => {
   const [rooms, setRooms] = useState([]);
@@ -10,17 +11,9 @@ const RoomManagement = () => {
 
   useEffect(() => { fetchRooms(); }, []);
 
-  const getToken = () => {
-    const token = localStorage.getItem('token');
-    if (!token) { setError('No auth token found. Please log in again.'); return null; }
-    return token;
-  };
-
   const fetchRooms = async () => {
-    const token = getToken();
-    if (!token) return;
     try {
-      const res = await axios.get('/api/rooms', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/api/rooms');
       setRooms(res.data);
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || 'Failed to load rooms');
@@ -34,13 +27,11 @@ const RoomManagement = () => {
       setError('All fields are required');
       return;
     }
-    const token = getToken();
-    if (!token) return;
     try {
       if (editingId) {
-        await axios.put(`/api/rooms/${editingId}`, form, { headers: { Authorization: `Bearer ${token}` } });
+        await api.put(`/api/rooms/${editingId}`, form);
       } else {
-        await axios.post('/api/rooms', form, { headers: { Authorization: `Bearer ${token}` } });
+        await api.post('/api/rooms', form);
       }
       setForm({ roomNumber: '', capacity: '', floor: '' });
       setEditingId(null);
@@ -56,10 +47,8 @@ const RoomManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    const token = getToken();
-    if (!token) return;
     try {
-      await axios.delete(`/api/rooms/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await api.delete(`/api/rooms/${id}`);
       fetchRooms();
     } catch (err) {
       setError(err.response?.data?.error || err.response?.data?.message || 'Failed to delete room');
@@ -73,7 +62,7 @@ const RoomManagement = () => {
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto p-6">
+    <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold text-gray-800 mb-2">Room Management</h1>
       <p className="text-gray-500 mb-6">Add, edit, and remove examination rooms</p>
 
@@ -148,7 +137,7 @@ const RoomManagement = () => {
           </div>
         )}
       </div>
-    </motion.div>
+    </m.div>
   );
 };
 

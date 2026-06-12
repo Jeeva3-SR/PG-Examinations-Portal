@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
 const AllSubjects = () => {
   const [subjects, setSubjects] = useState([]);
@@ -8,7 +8,7 @@ const AllSubjects = () => {
   useEffect(() => {
     const fetch = async () => {
       try {
-        const res = await axios.get('/api/courses');
+        const res = await api.get('/api/courses');
         setSubjects(res.data);
       } catch {} finally {
         setLoading(false);

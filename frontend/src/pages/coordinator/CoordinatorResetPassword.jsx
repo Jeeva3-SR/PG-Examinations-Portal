@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import axios from 'axios';
+import api from '../../lib/api';
 
 const menuItems = [
   { path: '/dashboard', label: 'Dashboard', icon: <span className="mr-2">🏠</span> },
@@ -35,7 +35,7 @@ const CoordinatorResetPassword = () => {
     }
     setLoading(true);
     try {
-      await axios.post('/api/users/coordinator/reset-password', {
+      await api.post('/api/users/coordinator/reset-password', {
         currentPassword,
         newPassword
       });

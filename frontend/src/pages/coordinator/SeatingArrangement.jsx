@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import { Calendar, Clock, Building2, Users, AlertCircle, UserPlus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -16,6 +16,32 @@ import {
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+const sessionOptions = [
+  { value: 'FN', label: 'FN' },
+  { value: 'AN', label: 'AN' }
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
+
 const SeatingArrangement = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState('');
@@ -27,11 +53,6 @@ const SeatingArrangement = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const sessionOptions = [
-    { value: 'FN', label: 'FN' },
-    { value: 'AN', label: 'AN' }
-  ];
-
   useEffect(() => {
     fetchRooms();
     fetchSessionDates();
@@ -39,7 +60,7 @@ const SeatingArrangement = () => {
 
   const fetchRooms = async () => {
     try {
-      const response = await axios.get('/api/seating-arrangement/rooms');
+      const response = await api.get('/api/seating-arrangement/rooms');
       setRooms(response.data);
     } catch (error) {
       setError('Failed to fetch rooms');
@@ -49,7 +70,7 @@ const SeatingArrangement = () => {
   const fetchSessionDates = async () => {
     try {
       // Fetch all sessions from the backend
-      const response = await axios.get('http://localhost:5000/api/sessions');
+      const response = await api.get('/api/sessions');
       // Extract unique dates from the session objects
       const sessions = response.data;
       const uniqueDatesSet = new Set();
@@ -78,7 +99,7 @@ const SeatingArrangement = () => {
     setError('');
 
     try {
-      const response = await axios.post('/api/seating-arrangement/generate', {
+      const response = await api.post('/api/seating-arrangement/generate', {
         date,
         session
       });
@@ -123,44 +144,23 @@ const SeatingArrangement = () => {
     doc.save('seating-arrangement.pdf');
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3
-      }
-    }
-  };
-
   return (
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Seating Arrangement
-          </motion.h1>
-          <motion.div
+          </m.h1>
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -257,7 +257,7 @@ const SeatingArrangement = () => {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {arrangements.map((room, idx) => (
-                          <tr key={idx}>
+                          <tr key={room._id || room.roomNumber || idx}>
                             <td className="px-4 py-2 whitespace-nowrap">{room.roomNumber}</td>
                             <td className="px-4 py-2 whitespace-nowrap">{new Date(room.date).toLocaleDateString()}</td>
                             <td className="px-4 py-2 whitespace-nowrap">{room.session}</td>
@@ -285,8 +285,8 @@ const SeatingArrangement = () => {
                 </button>
               </>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </div>
   );
 };

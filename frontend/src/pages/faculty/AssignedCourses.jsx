@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 
 const AssignedCourses = () => {
+  const user = useAuthStore((s) => s.user);
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -9,25 +11,15 @@ const AssignedCourses = () => {
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
-        const loggedInFaculty = localStorage.getItem('loggedInFaculty');
-        const token = localStorage.getItem('token');
-
-        if (!loggedInFaculty) {
-          setError('User profile session data missing. Please try logging in again.');
-          setLoading(false);
-          return;
-        }
-
-        const facultyInfo = JSON.parse(loggedInFaculty);
-        const facultyId = facultyInfo.facultyId || facultyInfo.userId;
+        const facultyId = user?.facultyId || user?.userId;
 
         if (!facultyId) {
-          setError('Faculty ID not found in profile.');
+          setError('Faculty ID not found in profile. Please try logging in again.');
           setLoading(false);
           return;
         }
 
-        const res = await axios.get('/api/subject-assignments');
+        const res = await api.get('/api/subject-assignments');
         const myAssignments = res.data.filter(a => a.facultyId === facultyId);
         setAssignments(myAssignments);
       } catch (err) {
@@ -38,7 +30,7 @@ const AssignedCourses = () => {
     };
 
     fetchAssignments();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return (

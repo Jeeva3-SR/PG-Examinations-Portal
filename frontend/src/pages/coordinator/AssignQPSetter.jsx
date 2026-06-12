@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
+import api from '../../lib/api';
+import { m } from 'framer-motion';
 
+const handleSendToFaculty = (orderId) => {
+  alert('Letter sent to faculty!');
+};
 
 const AssignQPSetter = () => {
   const [courses, setCourses] = useState([]);
@@ -25,9 +28,9 @@ const AssignQPSetter = () => {
     const fetchData = async () => {
       try {
         const [coursesRes, facultyRes, qpRes] = await Promise.all([
-          axios.get('/api/courses'),
-          axios.get('/api/faculty'),
-          axios.get('/api/qporders'),
+          api.get('/api/courses'),
+          api.get('/api/faculty'),
+          api.get('/api/qporders'),
         ]);
         setCourses(coursesRes.data);
         setAllFaculty(facultyRes.data);
@@ -58,7 +61,7 @@ const AssignQPSetter = () => {
 
     try {
       const selectedFacultyData = faculty.find(f => f.facultyId === selectedFaculty);
-      await axios.post('/api/assigned-qpsetters', {
+      await api.post('/api/assigned-qpsetters', {
         subject: selectedSubject,
         facultyId: selectedFacultyData.facultyId,
         facultyName: selectedFacultyData.name
@@ -96,7 +99,7 @@ const AssignQPSetter = () => {
     try {
       setError('');
       setSuccess('');
-      await axios.post('/api/qporders/generate', {
+      await api.post('/api/qporders/generate', {
         facultyId: row.facultyId,
         courseCode: row.courseCode,
         courseName: row.courseName,
@@ -134,28 +137,23 @@ const AssignQPSetter = () => {
     );
   };
 
-  const handleSendToFaculty = (orderId) => {
-    // Placeholder: implement actual send logic (e.g., email, notification)
-    alert('Letter sent to faculty!');
-  };
-
   return (
 
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Assign QP Setters
-          </motion.h1>
+          </m.h1>
 
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
@@ -250,7 +248,7 @@ const AssignQPSetter = () => {
                         {assignedRows.map((row, idx) => {
                           const qpOrder = getQpOrderForRow(row);
                           return (
-                            <tr key={idx}>
+                            <tr key={row._id || `assigned-${row.courseName}-${row.facultyName}-${idx}`}>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.courseName}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{row.facultyName}</td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -310,7 +308,7 @@ const AssignQPSetter = () => {
               </div>
             )}
           </div>
-        </motion.div>
+        </m.div>
       </div>
   );
 };

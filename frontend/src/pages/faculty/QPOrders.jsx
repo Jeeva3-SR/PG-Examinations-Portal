@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { m, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { 
@@ -29,7 +30,7 @@ const QPOrders = () => {
   useEffect(() => {
     const fetchCoordinator = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/coordinator');
+        const res = await api.get('/api/coordinator');
         if (res.data) {
           setCoordinator({ name: res.data.name, designation: res.data.designation });
         }
@@ -40,13 +41,13 @@ const QPOrders = () => {
 
     const fetchOrders = async () => {
       try {
-        const facultyData = JSON.parse(localStorage.getItem('loggedInFaculty') || '{}');
-        if (!facultyData.facultyId) {
+        const facultyId = useAuthStore.getState().user?.facultyId;
+        if (!facultyId) {
           navigate('/faculty/login');
           return;
         }
 
-        const response = await axios.get(`/api/qporders/${facultyData.facultyId}`);
+        const response = await api.get(`/api/qporders/${facultyId}`);
         setOrders(response.data);
         setLoading(false);
       } catch (err) {
@@ -304,7 +305,7 @@ const QPOrders = () => {
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
             
             {/* Backdrop Blur Mask */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -313,7 +314,7 @@ const QPOrders = () => {
             />
 
             {/* Main Centered Box Panel */}
-            <motion.div 
+            <m.div 
               initial={{ opacity: 0, scale: 0.95, y: 12 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 12 }}
@@ -347,7 +348,7 @@ const QPOrders = () => {
                 />
               </div>
 
-            </motion.div>
+            </m.div>
           </div>
         )}
       </AnimatePresence>

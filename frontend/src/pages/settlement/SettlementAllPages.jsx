@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 import html2pdf from 'html2pdf.js';
-import axios from 'axios';
+import api from '../../lib/api';
 import { SettlementProvider } from './SettlementContext';
 import SettlementAbstract from './SettlementAbstract';
 import SettlementMiscellaneousReceipt from './SettlementMiscellaneousReceipt';
@@ -29,7 +29,7 @@ const SettlementAllPages = () => {
     const fetchExamMonth = async () => {
       setLoading(true);
       try {
-        const sessionsRes = await axios.get('/api/sessions');
+        const sessionsRes = await api.get('/api/sessions');
         const sessions = sessionsRes.data;
         let dynamicExamMonth = '';
         if (sessions && sessions.length > 0) {

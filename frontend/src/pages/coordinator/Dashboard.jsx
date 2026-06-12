@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 import {
   Users,
   Calendar,
@@ -13,9 +13,7 @@ import {
   Library
 } from 'lucide-react';
 
-const Dashboard = () => {
-  // Upgraded modules structure configuration matching the premium layout look
-  const modules = [
+const modules = [
     {
       title: 'Student Input System',
       description: 'Manage student profile parameters, batches, and master course registrations.',
@@ -81,7 +79,7 @@ const Dashboard = () => {
     }
   ];
 
-  const containerVariants = {
+const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -91,7 +89,7 @@ const Dashboard = () => {
     }
   };
 
-  const itemVariants = {
+const itemVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
@@ -100,6 +98,7 @@ const Dashboard = () => {
     }
   };
 
+const Dashboard = () => {
   return (
     // FIXED: Removed the local duplicate <Sidebar> wrapper completely so it doesn't double-render headers!
     <div className="space-y-8 animate-fadeIn text-left">
@@ -126,14 +125,14 @@ const Dashboard = () => {
           </h3>
         </div>
 
-        <motion.div
+        <m.div
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {modules.map((module) => (
-            <motion.div
+            <m.div
               key={module.path}
               variants={itemVariants}
               whileHover={{ scale: 1.01, y: -2 }}
@@ -164,9 +163,9 @@ const Dashboard = () => {
                   </div>
                 </div>
               </Link>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
       </div>
     </div>
   );

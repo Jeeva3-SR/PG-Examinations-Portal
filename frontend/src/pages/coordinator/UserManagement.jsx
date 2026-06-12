@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -21,14 +22,7 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setError('No auth token found. Please log in again.');
-        return;
-      }
-      const response = await axios.get('/api/users', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/api/users');
       setUsers(response.data);
     } catch (error) {
       const msg = error.response?.data?.error || error.message || 'Error fetching users';
@@ -50,7 +44,7 @@ const UserManagement = () => {
     setSuccess('');
 
     try {
-      await axios.post('http://localhost:5000/api/register', formData);
+      await api.post('/api/register', formData);
       setSuccess('Faculty registered successfully');
       setFormData({
         name: '',
@@ -69,7 +63,7 @@ const UserManagement = () => {
 
   const handleStatusChange = async (userId, isActive) => {
     try {
-      await axios.patch(`http://localhost:5000/api/auth/users/${userId}/status`, {
+      await api.patch(`/api/auth/users/${userId}/status`, {
         isActive
       });
       setSuccess('User status updated successfully');

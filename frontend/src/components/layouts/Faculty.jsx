@@ -1,5 +1,4 @@
-import React from 'react';
-import Sidebar from '../layouts/PageLayout';
+import AppLayout from './AppLayout';
 import { Outlet } from 'react-router-dom';
 
 const menuItems = [
@@ -7,8 +6,8 @@ const menuItems = [
   { path: '/faculty/assigned-courses', label: 'Assigned Courses', icon: '📚' },
   { path: '/faculty/qp-orders', label: 'Question Paper Orders', icon: '📄' },
   { path: '/faculty/invigilation-duty', label: 'Invigilation Duties', icon: '👥' },
-  { path: '/faculty/evaluator-details', label: 'Evaluator Tasks', icon: '🎯' }, 
-  { path: '/faculty/release-claim', label: 'Financial Claims', icon: '💸' },      
+  { path: '/faculty/evaluator-details', label: 'Evaluator Tasks', icon: '🎯' },
+  { path: '/faculty/release-claim', label: 'Financial Claims', icon: '💸' },
   { path: '/faculty/update-profile', label: 'Maintain Profile', icon: '📝' },
   { path: '/faculty/all-faculties', label: 'All Faculties', icon: '👨‍🏫' },
   { path: '/faculty/all-subjects', label: 'All Subjects', icon: '📖' },
@@ -16,17 +15,9 @@ const menuItems = [
 ];
 
 const Faculty = () => (
-  <Sidebar 
-    menuItems={menuItems} 
-    theme="bg-slate-900 text-slate-300 border-r border-slate-800" 
-    activeClass="bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/10 rounded-xl"
-  >
-    <div className="min-h-screen bg-slate-50/50 w-full p-4 md:p-8 overflow-y-auto">
-      <div className="max-w-7xl mx-auto">
-        <Outlet />
-      </div>
-    </div>
-  </Sidebar>
+  <AppLayout menuItems={menuItems}>
+    <Outlet />
+  </AppLayout>
 );
 
 export default Faculty;

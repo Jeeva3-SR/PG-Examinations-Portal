@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import jsPDF from 'jspdf';
 
 const ReleaseClaimLetterHOD = () => {
@@ -14,7 +14,7 @@ const ReleaseClaimLetterHOD = () => {
         // Fetch coordinator name on mount
         const fetchCoordinator = async () => {
             try {
-                const res = await axios.get('http://localhost:5000/api/coordinator');
+                const res = await api.get('/api/coordinator');
                 if (res.data && res.data.name) {
                     setCoordinatorName(res.data.name);
                 }
@@ -30,7 +30,7 @@ const ReleaseClaimLetterHOD = () => {
         setError('');
         setToast('');
         try {
-            const res = await axios.get('http://localhost:5000/api/claims/forwarded-advance-letter');
+            const res = await api.get('/api/claims/forwarded-advance-letter');
             const data = res.data;
             if (!data) {
                 setError('No forwarded letter found.');
@@ -59,7 +59,7 @@ const ReleaseClaimLetterHOD = () => {
         setLoading(true);
         setError('');
         try {
-            const res = await axios.get('http://localhost:5000/api/claims/forwarded-advance-letter');
+            const res = await api.get('/api/claims/forwarded-advance-letter');
             const data = res.data;
             if (!data) {
                 setError('No forwarded letter found.');

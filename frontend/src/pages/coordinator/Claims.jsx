@@ -1,12 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
 
+const generateClaimLetter = (claim) => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
 
-const API_BASE = 'http://localhost:5000';
+  doc.setFontSize(16);
+  doc.text('Claim Letter', pageWidth / 2, 20, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.text(`Faculty Name: ${claim.faculty?.name || 'N/A'}`, 20, 50);
+  doc.text(`Department: ${claim.faculty?.department || 'N/A'}`, 20, 60);
+  doc.text(`Employee ID: ${claim.faculty?.employeeId || 'N/A'}`, 20, 70);
+  doc.text(`Claim Period: ${claim.startDate ? format(new Date(claim.startDate), 'MMMM d, yyyy') : 'N/A'} to ${claim.endDate ? format(new Date(claim.endDate), 'MMMM d, yyyy') : 'N/A'}`, 20, 80);
+  doc.text(`Total Duties: ${claim.totalDuties || 'N/A'}`, 20, 90);
+  doc.text(`Total Amount: ₹${claim.totalAmount || 'N/A'}`, 20, 100);
+  doc.text(`Bank Account: ${claim.bankAccount || 'N/A'}`, 20, 110);
+  doc.text(`IFSC Code: ${claim.ifscCode || 'N/A'}`, 20, 120);
+
+  doc.setFontSize(10);
+  doc.text('Authorized Signature', 20, 150);
+  doc.text('Examination Cell', 20, 160);
+
+  doc.save(`Claim_${claim.faculty?.employeeId || 'letter'}.pdf`);
+};
 
 const dutyTypeOptions = [
   'Invigilation',
@@ -36,7 +59,7 @@ const Claims = () => {
     setLoading(true);
     setError('');
     try {
-      const res = await axios.get(`${API_BASE}/api/claims/all`);
+      const res = await api.get('/api/claims/all');
       setClaims(res.data.map((c, i) => ({ ...c, amount: c.amount ?? '', rowIndex: i + 1 })));
     } catch (err) {
       setError('Failed to fetch claims.');
@@ -56,7 +79,7 @@ const Claims = () => {
       return;
     }
     try {
-      await axios.post(`${API_BASE}/api/claims`, {
+      await api.post('/api/claims', {
         claimId: claim.claimId,
         facultyId: claim.facultyId,
         facultyName: claim.facultyName,
@@ -86,59 +109,29 @@ const Claims = () => {
 
   const handleGenerateClaims = async () => {
     try {
-      await axios.post('http://localhost:5000/api/claims/generate');
+      await api.post('/api/claims/generate');
       fetchClaims();
     } catch (error) {
       console.error('Error generating claims:', error);
     }
   };
 
-  const generateClaimLetter = (claim) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Header
-    doc.setFontSize(16);
-    doc.text('Claim Letter', pageWidth / 2, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
-
-    // Content
-    doc.setFontSize(10);
-    doc.text(`Faculty Name: ${claim.faculty.name}`, 20, 50);
-    doc.text(`Department: ${claim.faculty.department}`, 20, 60);
-    doc.text(`Employee ID: ${claim.faculty.employeeId}`, 20, 70);
-    doc.text(`Claim Period: ${format(new Date(claim.startDate), 'MMMM d, yyyy')} to ${format(new Date(claim.endDate), 'MMMM d, yyyy')}`, 20, 80);
-    doc.text(`Total Duties: ${claim.totalDuties}`, 20, 90);
-    doc.text(`Total Amount: ₹${claim.totalAmount}`, 20, 100);
-    doc.text(`Bank Account: ${claim.bankAccount}`, 20, 110);
-    doc.text(`IFSC Code: ${claim.ifscCode}`, 20, 120);
-
-    // Footer
-    doc.setFontSize(10);
-    doc.text('Authorized Signature', 20, 150);
-    doc.text('Examination Cell', 20, 160);
-
-    // Save the PDF
-    doc.save(`Claim_${claim.faculty.employeeId}.pdf`);
-  };
-
   return (
       <div className="max-w-6xl mx-auto p-6">
-        <motion.div
+        <m.div
           initial={{ opacity: 0, y: 32 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
           className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
         >
-          <motion.h1
+          <m.h1
             initial={{ opacity: 0, y: -16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="text-3xl font-bold mb-6"
           >
             Faculty Exam Duty Claims
-          </motion.h1>
+          </m.h1>
           <div className="mb-4 flex items-center gap-4">
             <input
               type="text"
@@ -224,7 +217,7 @@ const Claims = () => {
               Generate Settlement PDF
             </Link>
           </div>
-        </motion.div>
+        </m.div>
       </div>
   );
 };

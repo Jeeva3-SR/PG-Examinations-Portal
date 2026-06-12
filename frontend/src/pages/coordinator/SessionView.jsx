@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { motion } from 'framer-motion';
+import api from '../../lib/api';
+import { m } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import TimetableUpload from '../../components/TimetableUpload';
 import SessionReportModal from '../../components/SessionReportModal';
@@ -23,6 +23,15 @@ const VIEW_FILTERS = [
   { id: 'future', label: 'Future' },
   { id: 'cancelled', label: 'Cancelled' },
 ];
+
+const STICKY_HEAD = 'sticky left-0 z-30 bg-blue-100 border-r border-slate-300 shadow-[2px_0_6px_-2px_rgba(0,0,0,0.12)]';
+
+const toDateInputValue = (isoDate) => {
+  if (!isoDate) return '';
+  const date = new Date(isoDate);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+};
 
 const getTodayKey = () => {
   const today = new Date();
@@ -72,6 +81,16 @@ const getRowClassName = (session) => {
   return 'bg-white hover:bg-slate-50';
 };
 
+const stickyCellClass = (rowBg) =>
+  `sticky left-0 z-20 ${rowBg} border-r border-slate-200 shadow-[2px_0_6px_-2px_rgba(0,0,0,0.1)] px-2 py-4 text-center min-w-[52px]`;
+
+const PencilIcon = ({ className = 'w-4 h-4' }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+    <path d="M12 20h9" strokeLinecap="round" />
+    <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const isDuplicateSession = (sessions, { date, session, courseCode, department, excludeId }) => {
   const code = String(courseCode).trim().toUpperCase();
   const dept = String(department || '').trim();
@@ -85,13 +104,6 @@ const isDuplicateSession = (sessions, { date, session, courseCode, department, e
       && String(s.department || '').trim() === dept
     );
   });
-};
-
-const toDateInputValue = (isoDate) => {
-  if (!isoDate) return '';
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toISOString().slice(0, 10);
 };
 
 const DepartmentSelect = ({ value, onChange, className = '' }) => {
@@ -132,9 +144,9 @@ const SessionView = () => {
   const fetchSessions = async () => {
     setLoading(true);
     try {
-      const res = await axios.get('/api/sessions');
+      const res = await api.get('/api/sessions');
       setSessions(res.data);
-    } catch (err) {
+    } catch {
       setSessions([]);
     } finally {
       setLoading(false);
@@ -143,7 +155,7 @@ const SessionView = () => {
 
   useEffect(() => {
     fetchSessions();
-    axios.get('/api/courses').then((res) => setCourses(res.data)).catch(() => {});
+    api.get('/api/courses').then((res) => setCourses(res.data)).catch(() => {});
   }, []);
 
   const handleNewSessionChange = (e) => {
@@ -167,7 +179,7 @@ const SessionView = () => {
     }
 
     try {
-      await axios.post('/api/sessions', newSession);
+      await api.post('/api/sessions', newSession);
       alert('Session added successfully!');
       setNewSession({
         date: '',
@@ -209,9 +221,7 @@ const SessionView = () => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const scheduleChanged = (form) => {
-    return form.date !== form.originalDate || form.session !== form.originalSession;
-  };
+  const scheduleChanged = (form) => form.date !== form.originalDate || form.session !== form.originalSession;
 
   const submitEdit = async (rescheduleData = null) => {
     if (!editForm.department) {
@@ -260,7 +270,7 @@ const SessionView = () => {
         payload.rescheduleReason = rescheduleData.rescheduleReason.trim();
       }
 
-      await axios.patch(`/api/sessions/${editingId}`, payload);
+      await api.patch(`/api/sessions/${editingId}`, payload);
       alert(changed
         ? 'Session updated and assigned faculty notified about the schedule change.'
         : 'Session updated successfully!');
@@ -272,39 +282,39 @@ const SessionView = () => {
     }
   };
 
+  const buildImpactMessage = (impact, actionLabel) => {
+    const lines = [];
+    if (impact.hasStudents) {
+      lines.push(`- ${impact.studentInputCount} student input record(s) will be kept (not deleted)`);
+    }
+    if (impact.hasSeating) {
+      lines.push(`- ${impact.seatingCount} seating arrangement(s) will be released`);
+    }
+    if (impact.hasDuties) {
+      lines.push(`- ${impact.dutyCount} assigned duty(s) will be freed`);
+    }
+    if (lines.length === 0) return '';
+    return ['', `This session has linked allocations:`, ...lines, '', `Assigned faculty will be notified about the ${actionLabel}.`, '', 'Do you want to continue?'].join('\n');
+  };
+
   const handleCancelSession = async (session) => {
-    let impact = { hasAllocations: false, hasStudents: false, hasSeating: false, hasDuties: false };
+    let impact = { hasStudents: false, hasSeating: false, hasDuties: false, studentInputCount: 0 };
     try {
-      const impactRes = await axios.get(`/api/sessions/${session._id}/delete-impact`);
+      const impactRes = await api.get(`/api/sessions/${session._id}/delete-impact`);
       impact = impactRes.data;
     } catch {
       // continue with basic confirmation
     }
 
     let confirmMessage = `Cancel session for ${session.courseCode} - ${session.courseName}?`;
-    if (impact.hasAllocations || impact.hasDuties) {
-      confirmMessage = [
-        confirmMessage,
-        '',
-        'This session has student or seating allocations.',
-        impact.hasStudents ? `- ${impact.studentInputCount} student list(s) will be removed` : '',
-        impact.hasSeating ? `- ${impact.seatingCount} seating arrangement(s) will be released` : '',
-        impact.hasDuties ? `- ${impact.dutyCount} assigned duty(s) will be freed` : '',
-        '',
-        'Assigned faculty will be notified about the cancellation.',
-        '',
-        'Do you want to continue?',
-      ].filter(Boolean).join('\n');
-    } else {
-      confirmMessage += '\n\nAssigned faculty will be notified about the cancellation.';
-    }
+    confirmMessage += buildImpactMessage(impact, 'cancellation') || '\n\nAssigned faculty will be notified about the cancellation.';
 
     if (!window.confirm(confirmMessage)) return;
 
     const cancelReason = window.prompt('Enter cancellation reason (optional):') || '';
 
     try {
-      const res = await axios.post(`/api/sessions/${session._id}/cancel`, { cancelReason });
+      const res = await api.post(`/api/sessions/${session._id}/cancel`, { cancelReason });
       const notified = res.data?.notified || 0;
       alert(`Session cancelled and marked in red. ${notified} assigned person(s) notified.`);
       fetchSessions();
@@ -315,44 +325,27 @@ const SessionView = () => {
   };
 
   const handleDeleteSession = async (session) => {
-    let impact = { hasAllocations: false, hasStudents: false, hasSeating: false, hasDuties: false };
+    let impact = { hasStudents: false, hasSeating: false, hasDuties: false, studentInputCount: 0 };
     try {
-      const impactRes = await axios.get(`/api/sessions/${session._id}/delete-impact`);
+      const impactRes = await api.get(`/api/sessions/${session._id}/delete-impact`);
       impact = impactRes.data;
     } catch {
       // proceed with basic confirmation if impact check fails
     }
 
     let confirmMessage = `Delete session for ${session.courseCode} on ${toDateInputValue(session.date)} (${session.session})?`;
-
-    if (impact.hasAllocations || impact.hasDuties) {
-      confirmMessage = [
-        `Delete session for ${session.courseCode} - ${session.courseName}?`,
-        '',
-        'This session has student or seating allocations.',
-        impact.hasStudents ? `- ${impact.studentInputCount} student list(s) will be removed` : '',
-        impact.hasSeating ? `- ${impact.seatingCount} seating arrangement(s) will be released` : '',
-        impact.hasDuties ? `- ${impact.dutyCount} assigned duty(s) will be freed` : '',
-        '',
-        'Deleting will free allotted rooms and assigned duties for this session slot.',
-        'Assigned invigilators, QP setters, and faculty will be notified.',
-        '',
-        'Do you want to continue?',
-      ].filter(Boolean).join('\n');
-    } else {
-      confirmMessage += '\n\nAssigned invigilators, QP setters, and faculty will be notified.';
-    }
+    confirmMessage += buildImpactMessage(impact, 'deletion') || '\n\nAssigned invigilators, QP setters, and faculty will be notified.';
 
     if (!window.confirm(confirmMessage)) return;
 
     try {
-      const res = await axios.delete(`/api/sessions/${session._id}`);
+      const res = await api.delete(`/api/sessions/${session._id}`);
       const notified = res.data?.notified || 0;
       const cleanup = res.data?.cleanup;
       let successMsg = `Session deleted. ${notified} assigned person(s) notified.`;
       if (cleanup) {
-        if (cleanup.studentInputsDeleted > 0) {
-          successMsg += ` ${cleanup.studentInputsDeleted} student list(s) removed.`;
+        if (cleanup.studentInputsPreserved > 0) {
+          successMsg += ` ${cleanup.studentInputsPreserved} student input record(s) preserved.`;
         }
         if (cleanup.seatingDeleted > 0) {
           successMsg += ` ${cleanup.seatingDeleted} seating arrangement(s) released.`;
@@ -373,78 +366,75 @@ const SessionView = () => {
 
   const renderRow = (s) => {
     const isEditing = editingId === s._id;
+    const rowBg = isEditing ? 'bg-yellow-50' : getRowClassName(s);
 
     if (isEditing && editForm) {
       return (
-        <tr key={s._id} className="bg-yellow-50">
-          <td className="px-3 py-2">
-            <input
-              type="date"
-              value={editForm.date}
-              onChange={(e) => handleEditChange('date', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            />
+        <tr key={s._id} className={rowBg}>
+          <td className={stickyCellClass(rowBg)}>
+            <div className="flex flex-col items-center gap-1">
+              <button
+                type="button"
+                onClick={() => submitEdit()}
+                title="Save"
+                className="p-1.5 rounded-md text-green-700 hover:bg-green-100"
+              >
+                ✓
+              </button>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                title="Cancel edit"
+                className="p-1.5 rounded-md text-slate-600 hover:bg-slate-100"
+              >
+                ✕
+              </button>
+            </div>
           </td>
           <td className="px-3 py-2">
-            <input
-              type="text"
-              value={editForm.day}
-              onChange={(e) => handleEditChange('day', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            />
+            <input type="date" value={editForm.date} onChange={(e) => handleEditChange('date', e.target.value)} className="w-full p-1 border rounded text-sm" />
           </td>
           <td className="px-3 py-2">
-            <select
-              value={editForm.session}
-              onChange={(e) => handleEditChange('session', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            >
+            <input type="text" value={editForm.day} onChange={(e) => handleEditChange('day', e.target.value)} className="w-full p-1 border rounded text-sm" />
+          </td>
+          <td className="px-3 py-2">
+            <select value={editForm.session} onChange={(e) => handleEditChange('session', e.target.value)} className="w-full p-1 border rounded text-sm">
               <option value="FN">FN</option>
               <option value="AN">AN</option>
             </select>
           </td>
           <td className="px-3 py-2">
-            <DepartmentSelect
-              value={editForm.department}
-              onChange={(e) => handleEditChange('department', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            />
+            <DepartmentSelect value={editForm.department} onChange={(e) => handleEditChange('department', e.target.value)} className="w-full p-1 border rounded text-sm" />
           </td>
           <td className="px-3 py-2">
-            <input
-              type="text"
-              value={editForm.courseCode}
-              onChange={(e) => handleEditChange('courseCode', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            />
+            <input type="text" value={editForm.courseCode} onChange={(e) => handleEditChange('courseCode', e.target.value)} className="w-full p-1 border rounded text-sm" />
           </td>
           <td className="px-3 py-2">
-            <input
-              type="text"
-              value={editForm.courseName}
-              onChange={(e) => handleEditChange('courseName', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            />
+            <input type="text" value={editForm.courseName} onChange={(e) => handleEditChange('courseName', e.target.value)} className="w-full p-1 border rounded text-sm" />
           </td>
           <td className="px-3 py-2">
-            <input
-              type="text"
-              value={editForm.specialization}
-              onChange={(e) => handleEditChange('specialization', e.target.value)}
-              className="w-full p-1 border rounded text-sm"
-            />
+            <input type="text" value={editForm.specialization} onChange={(e) => handleEditChange('specialization', e.target.value)} className="w-full p-1 border rounded text-sm" />
           </td>
           <td className="px-3 py-2 text-xs text-slate-500">Editing</td>
-          <td className="px-3 py-2 whitespace-nowrap text-sm space-x-2">
-            <button onClick={() => submitEdit()} className="text-green-600 hover:text-green-900">Save</button>
-            <button onClick={cancelEdit} className="text-gray-600 hover:text-gray-900">Cancel</button>
-          </td>
+          <td className="px-3 py-2 whitespace-nowrap text-sm text-slate-400">—</td>
         </tr>
       );
     }
 
     return (
-      <tr key={s._id} className={`${getRowClassName(s)} transition duration-200`}>
+      <tr key={s._id} className={`${rowBg} transition duration-200`}>
+        <td className={stickyCellClass(rowBg)}>
+          {s.status !== 'cancelled' && (
+            <button
+              type="button"
+              onClick={() => startEdit(s)}
+              title="Edit session"
+              className="inline-flex items-center justify-center p-2 rounded-md text-blue-700 hover:bg-blue-100 hover:text-blue-900"
+            >
+              <PencilIcon />
+            </button>
+          )}
+        </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">
           {s.date ? new Date(s.date).toLocaleDateString('en-GB', {
             day: '2-digit',
@@ -455,13 +445,9 @@ const SessionView = () => {
         </td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.day}</td>
         <td className="px-6 py-4 whitespace-nowrap text-sm">
-          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-            {s.session}
-          </span>
+          <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{s.session}</span>
         </td>
-        <td className="px-6 py-4 text-sm text-slate-900 whitespace-normal min-w-[180px]">
-          {s.department || 'Unassigned'}
-        </td>
+        <td className="px-6 py-4 text-sm text-slate-900 whitespace-normal min-w-[180px]">{s.department || 'Unassigned'}</td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.courseCode}</td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.courseName}</td>
         <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-900">{s.specialization}</td>
@@ -478,9 +464,8 @@ const SessionView = () => {
         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
           {s.status !== 'cancelled' && (
             <>
-              <button onClick={() => startEdit(s)} className="text-blue-600 hover:text-blue-900">Edit</button>
               <button
-                onClick={() => navigate(`/student-input?sessionId=${s._id}&specialization=${encodeURIComponent(s.specialization)}&courseCode=${encodeURIComponent(s.courseCode)}&courseName=${encodeURIComponent(s.courseName)}`)}
+                onClick={() => navigate(`/student-input?sessionId=${s._id}&specialization=${encodeURIComponent(s.specialization)}&courseCode=${encodeURIComponent(s.courseCode)}&courseName=${encodeURIComponent(s.courseName)}&date=${encodeURIComponent(s.date)}&session=${s.session}`)}
                 className="text-green-600 hover:text-green-900"
               >
                 Enter Students
@@ -504,59 +489,25 @@ const SessionView = () => {
     <div className="min-h-screen bg-gradient-to-tr from-slate-100 to-blue-50 font-sans">
       <div className="max-w-7xl mx-auto p-6">
         <div className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl">
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: 'easeOut' }}
-            className="text-center mb-8"
-          >
-            <h1 className="text-3xl font-bold mb-2 tracking-wide text-slate-900">
-              Session Timetable
-            </h1>
-            <p className="text-slate-900 text-lg">
-              Upload and manage examination timetables
-            </p>
-          </motion.div>
+          <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="text-center mb-8">
+            <h1 className="text-3xl font-bold mb-2 tracking-wide text-slate-900">Session Timetable</h1>
+            <p className="text-slate-900 text-lg">Upload and manage examination timetables</p>
+          </m.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15, duration: 0.5, ease: 'easeOut' }}
-            className="bg-white shadow-xl rounded-2xl p-6 mb-8 transition-all duration-500 hover:shadow-2xl"
-          >
+          <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, duration: 0.5, ease: 'easeOut' }} className="bg-white shadow-xl rounded-2xl p-6 mb-8">
             <TimetableUpload onUploadSuccess={fetchSessions} departmentOptions={DEPARTMENT_OPTIONS} />
-          </motion.div>
+          </m.div>
 
           <div className="mb-6 p-4 bg-white rounded-lg shadow">
             <h2 className="text-xl font-semibold mb-2">Add New Session</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              <input
-                type="date"
-                name="date"
-                value={newSession.date}
-                onChange={handleNewSessionChange}
-                className="p-2 border rounded-md"
-              />
-              <select
-                name="session"
-                value={newSession.session}
-                onChange={handleNewSessionChange}
-                className="p-2 border rounded-md"
-              >
+              <input type="date" name="date" value={newSession.date} onChange={handleNewSessionChange} className="p-2 border rounded-md" />
+              <select name="session" value={newSession.session} onChange={handleNewSessionChange} className="p-2 border rounded-md">
                 <option value="FN">FN</option>
                 <option value="AN">AN</option>
               </select>
-              <DepartmentSelect
-                value={newSession.department}
-                onChange={(e) => setNewSession((prev) => ({ ...prev, department: e.target.value }))}
-                className="p-2 border rounded-md w-full"
-              />
-              <select
-                name="specialization"
-                value={newSession.specialization}
-                onChange={handleNewSessionChange}
-                className="p-2 border rounded-md"
-              >
+              <DepartmentSelect value={newSession.department} onChange={(e) => setNewSession((prev) => ({ ...prev, department: e.target.value }))} className="p-2 border rounded-md w-full" />
+              <select name="specialization" value={newSession.specialization} onChange={handleNewSessionChange} className="p-2 border rounded-md">
                 <option value="">Select Specialization</option>
                 <option value="B.E">B.E</option>
                 <option value="M.E">M.E</option>
@@ -567,11 +518,7 @@ const SessionView = () => {
                 onChange={(e) => {
                   const code = e.target.value;
                   const course = courses.find((c) => c.courseCode === code);
-                  setNewSession((prev) => ({
-                    ...prev,
-                    courseCode: code,
-                    courseName: course ? course.courseName : '',
-                  }));
+                  setNewSession((prev) => ({ ...prev, courseCode: code, courseName: course ? course.courseName : '' }));
                 }}
                 className="p-2 border rounded-md"
               >
@@ -580,52 +527,18 @@ const SessionView = () => {
                   <option key={c._id} value={c.courseCode}>{c.courseCode} - {c.courseName}</option>
                 ))}
               </select>
-              <input
-                type="text"
-                name="courseName"
-                placeholder="Course Name"
-                value={newSession.courseName}
-                readOnly
-                className="p-2 border rounded-md bg-gray-50"
-              />
+              <input type="text" name="courseName" placeholder="Course Name" value={newSession.courseName} readOnly className="p-2 border rounded-md bg-gray-50" />
             </div>
-            <button
-              onClick={handleAddSession}
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-            >
-              Add Session
-            </button>
+            <button onClick={handleAddSession} className="mt-4 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Add Session</button>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
-            className="bg-white shadow-xl rounded-2xl p-6 transition-all duration-500 hover:shadow-2xl"
-          >
+          <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }} className="bg-white shadow-xl rounded-2xl p-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <h2 className="text-xl font-semibold tracking-wide text-slate-900">
-                Session List
-              </h2>
+              <h2 className="text-xl font-semibold tracking-wide text-slate-900">Session List</h2>
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setReportModalOpen(true)}
-                  className="px-4 py-1.5 rounded-full text-sm font-medium bg-slate-800 text-white hover:bg-slate-900 shadow"
-                >
-                  Print / PDF Report
-                </button>
+                <button type="button" onClick={() => setReportModalOpen(true)} className="px-4 py-1.5 rounded-full text-sm font-medium bg-slate-800 text-white hover:bg-slate-900 shadow">Print / PDF Report</button>
                 {VIEW_FILTERS.map((option) => (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() => setViewFilter(option.id)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${
-                      viewFilter === option.id
-                        ? 'bg-blue-600 text-white shadow'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-                    }`}
-                  >
+                  <button key={option.id} type="button" onClick={() => setViewFilter(option.id)} className={`px-3 py-1.5 rounded-full text-sm font-medium transition ${viewFilter === option.id ? 'bg-blue-600 text-white shadow' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
                     {option.label}
                   </button>
                 ))}
@@ -636,20 +549,21 @@ const SessionView = () => {
               {viewFilter !== 'all' && ` — ${VIEW_FILTERS.find((f) => f.id === viewFilter)?.label} view`}
             </p>
             <div className="flex flex-wrap gap-4 mb-4 text-xs text-slate-700">
-              <span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded bg-green-50 border border-green-200" /> Completed (past date)</span>
-              <span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded bg-blue-50 border border-blue-200" /> Pre-poned / Postponed</span>
+              <span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded bg-green-50 border border-green-200" /> Completed</span>
+              <span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded bg-blue-50 border border-blue-200" /> Rescheduled</span>
               <span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded bg-white border border-slate-200" /> Scheduled</span>
               <span className="inline-flex items-center gap-2"><span className="w-4 h-4 rounded bg-red-50 border border-red-200" /> Cancelled</span>
             </div>
             {loading ? (
               <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr className="bg-blue-100">
+                      <th className={`${STICKY_HEAD} px-2 py-3 text-center text-xs font-medium text-slate-900 uppercase tracking-wider w-[52px]`} aria-label="Edit" />
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-900 uppercase tracking-wider">Date</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-900 uppercase tracking-wider">Day</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-slate-900 uppercase tracking-wider">Session</th>
@@ -664,9 +578,7 @@ const SessionView = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredSessions.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-6 py-10 text-center text-sm text-slate-500">
-                          No sessions match the selected view.
-                        </td>
+                        <td colSpan={10} className="px-6 py-10 text-center text-sm text-slate-500">No sessions match the selected view.</td>
                       </tr>
                     ) : (
                       filteredSessions.map((s) => renderRow(s))
@@ -675,61 +587,33 @@ const SessionView = () => {
                 </table>
               </div>
             )}
-          </motion.div>
+          </m.div>
         </div>
       </div>
 
-      <SessionReportModal
-        isOpen={reportModalOpen}
-        onClose={() => setReportModalOpen(false)}
-        sessions={sessions}
-      />
+      <SessionReportModal isOpen={reportModalOpen} onClose={() => setReportModalOpen(false)} sessions={sessions} />
 
       {rescheduleModal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Schedule Change</h3>
-            <p className="text-sm text-slate-600 mb-4">
-              You changed the date or session slot. Select whether this is a pre-pone or postpone and provide a reason. Assigned faculty will be notified.
-            </p>
+            <p className="text-sm text-slate-600 mb-4">Select pre-pone or postpone and provide a reason. Assigned faculty will be notified.</p>
             <div className="space-y-4">
               <div className="flex gap-4">
                 <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="rescheduleType"
-                    value="prepone"
-                    checked={rescheduleModal.rescheduleType === 'prepone'}
-                    onChange={() => setRescheduleModal((prev) => ({ ...prev, rescheduleType: 'prepone' }))}
-                  />
+                  <input type="radio" name="rescheduleType" value="prepone" checked={rescheduleModal.rescheduleType === 'prepone'} onChange={() => setRescheduleModal((prev) => ({ ...prev, rescheduleType: 'prepone' }))} />
                   Pre-pone
                 </label>
                 <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="rescheduleType"
-                    value="postpone"
-                    checked={rescheduleModal.rescheduleType === 'postpone'}
-                    onChange={() => setRescheduleModal((prev) => ({ ...prev, rescheduleType: 'postpone' }))}
-                  />
+                  <input type="radio" name="rescheduleType" value="postpone" checked={rescheduleModal.rescheduleType === 'postpone'} onChange={() => setRescheduleModal((prev) => ({ ...prev, rescheduleType: 'postpone' }))} />
                   Postpone
                 </label>
               </div>
-              <textarea
-                value={rescheduleModal.rescheduleReason}
-                onChange={(e) => setRescheduleModal((prev) => ({ ...prev, rescheduleReason: e.target.value }))}
-                placeholder="Enter reason for schedule change (required)"
-                className="w-full p-2 border rounded-md text-sm min-h-[100px]"
-              />
+              <textarea value={rescheduleModal.rescheduleReason} onChange={(e) => setRescheduleModal((prev) => ({ ...prev, rescheduleReason: e.target.value }))} placeholder="Enter reason (required)" className="w-full p-2 border rounded-md text-sm min-h-[100px]" />
             </div>
             <div className="flex justify-end gap-3 mt-6">
-              <button onClick={() => setRescheduleModal(null)} className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900">Back</button>
-              <button
-                onClick={() => submitEdit(rescheduleModal)}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Confirm & Notify
-              </button>
+              <button onClick={() => setRescheduleModal(null)} className="px-4 py-2 text-sm text-gray-700">Back</button>
+              <button onClick={() => submitEdit(rescheduleModal)} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">Confirm & Notify</button>
             </div>
           </div>
         </div>

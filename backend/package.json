@@ -5,7 +5,10 @@
   "scripts": {
     "start": "node server.js",
     "test": "node --test tests/timetableParser.test.js tests/sessionHelpers.test.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write \"**/*.js\"",
+    "format:check": "prettier --check \"**/*.js\""
   },
   "keywords": [],
   "author": "",
@@ -13,7 +16,6 @@
   "description": "",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1065.0",
-    "antd": "^5.26.1",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "csv-parser": "^3.2.0",
@@ -24,8 +26,6 @@
     "mongoose": "^8.15.1",
     "multer": "^2.1.1",
     "nodemailer": "^8.0.10",
-    "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.1",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

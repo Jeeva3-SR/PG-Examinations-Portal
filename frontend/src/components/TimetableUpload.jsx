@@ -1,7 +1,6 @@
 import React, { useState, useRef } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
-const API_BASE = 'http://localhost:5000/api/sessions';
 const ACCEPTED_EXTENSIONS = ['xlsx', 'xls', 'csv'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -67,6 +66,24 @@ const TimetableUpload = ({ onUploadSuccess, departmentOptions = [] }) => {
     resetPreview();
   };
 
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const droppedFile = e.dataTransfer.files[0];
+    if (!droppedFile) return;
+    if (!validateFile(droppedFile)) return;
+    setFile(droppedFile);
+    setSuccess('');
+    setError('');
+    resetPreview();
+  };
+
   const handleExtract = async (e) => {
     e.preventDefault();
     if (!file) {
@@ -82,7 +99,7 @@ const TimetableUpload = ({ onUploadSuccess, departmentOptions = [] }) => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await axios.post(`${API_BASE}/upload/preview`, formData, {
+      const response = await api.post('/api/sessions/upload/preview', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         timeout: 120000,
       });
@@ -180,7 +197,7 @@ const TimetableUpload = ({ onUploadSuccess, departmentOptions = [] }) => {
         department: session.department.trim(),
       }));
 
-      const response = await axios.post(`${API_BASE}/upload/commit`, { sessions: payload });
+      const response = await api.post('/api/sessions/upload/commit', { sessions: payload });
       setSuccess(`Timetable committed successfully! ${response.data.count} sessions saved.`);
       setFile(null);
       setPreviewSessions([]);
@@ -193,24 +210,6 @@ const TimetableUpload = ({ onUploadSuccess, departmentOptions = [] }) => {
     } finally {
       setCommitting(false);
     }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const droppedFile = e.dataTransfer.files[0];
-    if (!droppedFile) return;
-    if (!validateFile(droppedFile)) return;
-    setFile(droppedFile);
-    setSuccess('');
-    setError('');
-    resetPreview();
   };
 
   return (

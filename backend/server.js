@@ -4,20 +4,6 @@ const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-const swaggerUi = require('swagger-ui-express');
-let swaggerDocument = undefined;
-let swaggerJSDoc = undefined;
-try {
-  swaggerJSDoc = require('swagger-jsdoc');
-} catch (err) {
-  // swagger-jsdoc not installed yet; will fallback to static swagger.json if present
-}
-try {
-  swaggerDocument = require('./swagger.json');
-} catch (err) {
-  swaggerDocument = undefined;
-}
-
 // Create Express app
 const app = express();
 
@@ -50,29 +36,6 @@ app.use('/api/bank-accounts', require('./routes/bankAccountRoutes'));
 app.use('/api/subject-assignments', require('./routes/subjectAssignmentRoutes'));
 app.use('/api/rooms', require('./routes/roomRoutes'));
 app.use('/api', require('./routes/authRoutes'));
-
-
-// Swagger UI - API documentation
-if (swaggerJSDoc) {
-  const options = {
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'PG Examinations Portal API',
-        version: '1.0.0',
-        description: 'Auto-generated API documentation from JSDoc comments',
-      },
-    },
-    apis: [path.join(__dirname, 'routes', '*.js')],
-  };
-  const swaggerSpec = swaggerJSDoc(options);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-} else if (swaggerDocument) {
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
-} else {
-  console.warn('Swagger UI disabled: install swagger-jsdoc or provide swagger.json');
-}
-
 // Test route
 app.get('/api/test', (req, res) => {
   res.json({ message: 'API is working' });
@@ -81,7 +44,11 @@ app.get('/api/test', (req, res) => {
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Global error handler:', err);
-  
+
+  if (err.isOperational) {
+    return res.status(err.statusCode).json({ error: err.message });
+  }
+
   // Handle multer errors
   if (err.name === 'MulterError') {
     return res.status(400).json({
@@ -90,7 +57,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Handle mongoose errors
+  // Handle mongoose validation errors
   if (err.name === 'ValidationError') {
     return res.status(400).json({
       error: 'Validation error',
@@ -98,11 +65,17 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // Handle other errors
+  // Handle mongoose cast errors (invalid ObjectId, etc)
+  if (err.name === 'CastError') {
+    return res.status(400).json({
+      error: 'Invalid ID format',
+      message: err.message
+    });
+  }
+
+  // Handle other unknown errors
   res.status(500).json({
-    error: 'Internal Server Error',
-    message: err.message,
-    stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    error: 'Internal Server Error'
   });
 });
 
@@ -122,7 +95,7 @@ app.use((req, res) => {
 });
 
 // Connect to MongoDB
-const MONGODB_URI = 'mongodb://127.0.0.1:27017/exam-management';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/exam-management';
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));

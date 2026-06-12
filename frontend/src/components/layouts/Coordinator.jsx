@@ -1,5 +1,4 @@
-import React from 'react';
-import Sidebar from './PageLayout'; // Points directly to your premium Sidebar component
+import AppLayout from './AppLayout';
 import { Outlet } from 'react-router-dom';
 
 const menuItems = [
@@ -21,18 +20,9 @@ const menuItems = [
 ];
 
 const Coordinator = () => (
-  <Sidebar 
-    menuItems={menuItems} 
-    theme="bg-slate-900 text-slate-300 border-r border-slate-800" 
-    activeClass="bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/10 rounded-xl"
-  >
-    {/* Full width flexible viewport area */}
-    <div className="min-h-screen bg-slate-50/50 w-full p-4 md:p-8 overflow-y-auto">
-      <div className="max-w-7xl mx-auto">
-        <Outlet />
-      </div>
-    </div>
-  </Sidebar>
+  <AppLayout menuItems={menuItems}>
+    <Outlet />
+  </AppLayout>
 );
 
 export default Coordinator;

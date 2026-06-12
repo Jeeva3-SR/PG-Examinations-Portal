@@ -1,6 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
 import { jsPDF } from 'jspdf';
+
+const generatePDF = (order) => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(16);
+  doc.text('Question Paper Order Request', pageWidth / 2, 20, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.text(`Course Code: ${order.courseCode.courseCode}`, 20, 50);
+  doc.text(`Course Name: ${order.courseCode.courseName}`, 20, 60);
+  doc.text(`Student Count: ${order.courseCode.studentCount}`, 20, 70);
+  doc.text(`Quantity Required: ${order.quantity}`, 20, 80);
+  doc.text(`Order Date: ${new Date(order.orderDate).toLocaleDateString()}`, 20, 90);
+
+  doc.setFontSize(10);
+  doc.text('Authorized Signature', 20, 150);
+  doc.text('Examination Cell', 20, 160);
+
+  doc.save(`QP_Order_${order.courseCode.courseCode}.pdf`);
+};
 
 const QPOrder = () => {
   const [orders, setOrders] = useState([]);
@@ -13,7 +36,7 @@ const QPOrder = () => {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/qporders');
+      const response = await api.get('/api/qporders');
       setOrders(response.data);
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -22,7 +45,7 @@ const QPOrder = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/courses');
+      const response = await api.get('/api/courses');
       setCourses(response.data);
     } catch (error) {
       console.error('Error fetching courses:', error);
@@ -31,7 +54,7 @@ const QPOrder = () => {
 
   const handleGenerateOrders = async () => {
     try {
-      await axios.post('http://localhost:5000/api/qporders/generate-all');
+      await api.post('/api/qporders/generate-all');
       fetchOrders();
     } catch (error) {
       console.error('Error generating orders:', error);
@@ -40,40 +63,13 @@ const QPOrder = () => {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
-      await axios.patch(`http://localhost:5000/api/qporders/${orderId}/status`, {
+      await api.patch(`/api/qporders/${orderId}/status`, {
         status: newStatus,
       });
       fetchOrders();
     } catch (error) {
       console.error('Error updating order status:', error);
     }
-  };
-
-  const generatePDF = (order) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Header
-    doc.setFontSize(16);
-    doc.text('Question Paper Order Request', pageWidth / 2, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
-
-    // Content
-    doc.setFontSize(10);
-    doc.text(`Course Code: ${order.courseCode.courseCode}`, 20, 50);
-    doc.text(`Course Name: ${order.courseCode.courseName}`, 20, 60);
-    doc.text(`Student Count: ${order.courseCode.studentCount}`, 20, 70);
-    doc.text(`Quantity Required: ${order.quantity}`, 20, 80);
-    doc.text(`Order Date: ${new Date(order.orderDate).toLocaleDateString()}`, 20, 90);
-
-    // Footer
-    doc.setFontSize(10);
-    doc.text('Authorized Signature', 20, 150);
-    doc.text('Examination Cell', 20, 160);
-
-    // Save the PDF
-    doc.save(`QP_Order_${order.courseCode.courseCode}.pdf`);
   };
 
   return (

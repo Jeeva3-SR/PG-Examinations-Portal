@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
+import api from '../lib/api';
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -22,7 +22,7 @@ const ForgotPassword = () => {
     }
 
     try {
-      const res = await axios.post('/api/forgot-password', { email: email.trim() });
+      const res = await api.post('/api/forgot-password', { email: email.trim() });
       setMessage(res.data?.message || 'If that email exists, a password reset link has been generated.');
     } catch (apiError) {
       console.error('Forgot password submission failed:', apiError);

@@ -1,0 +1,10 @@
+node_modules/
+**/node_modules/
+build/
+dist/
+coverage/
+*.log
+package-lock.json
+frontend/build/
+backend/uploads/
+backend/scripts/graphgen/output/

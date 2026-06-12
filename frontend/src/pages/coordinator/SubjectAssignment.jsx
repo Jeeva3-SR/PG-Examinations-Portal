@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 
 const SubjectAssignment = () => {
   const [courses, setCourses] = useState([]);
@@ -27,21 +28,21 @@ const SubjectAssignment = () => {
 
   const fetchCourses = async () => {
     try {
-      const res = await axios.get('/api/courses');
+      const res = await api.get('/api/courses');
       setCourses(res.data);
     } catch { setError('Failed to load courses'); }
   };
 
   const fetchFaculty = async () => {
     try {
-      const res = await axios.get('/api/faculty');
+      const res = await api.get('/api/faculty');
       setFaculty(res.data);
     } catch { setError('Failed to load faculty'); }
   };
 
   const fetchAssignments = async () => {
     try {
-      const res = await axios.get('/api/subject-assignments');
+      const res = await api.get('/api/subject-assignments');
       setAssignments(res.data);
     } catch { setError('Failed to load assignments'); }
   };
@@ -71,10 +72,7 @@ const SubjectAssignment = () => {
     setMessage('');
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      await axios.post('/api/subject-assignments', form, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post('/api/subject-assignments', form);
       setMessage('Subject assigned successfully');
       setForm({ courseCode: '', courseName: '', specialization: '', facultyId: '', facultyName: '', year: '', semester: '', batch: '', academicYear: '' });
       fetchAssignments();
@@ -86,10 +84,7 @@ const SubjectAssignment = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Delete this assignment?')) return;
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`/api/subject-assignments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/api/subject-assignments/${id}`);
       fetchAssignments();
     } catch (err) {
       setError('Failed to delete assignment');

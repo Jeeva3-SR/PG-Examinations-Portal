@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
+import api from '../../lib/api';
+import useAuthStore from '../../store/useAuthStore';
 import { useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { m } from 'framer-motion';
+
+const handlePrint = () => {
+  window.print();
+};
 
 const CATEGORY_COLORS = {
   'CEG Regular': { bg: '#e0f2fe', border: '#0284c7', text: '#0369a1' },
@@ -18,17 +23,17 @@ const SeatCard = ({ student, number }) => {
         width: 130, height: 56, border: `2px solid ${colors.border}`,
         borderRadius: 6, backgroundColor: colors.bg, display: 'flex',
         flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-        padding: '2px 4px', fontSize: 11, position: 'relative',
+        padding: '2px 4px', fontSize: 12, position: 'relative',
       }}
     >
-      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 9, color: '#94a3b8' }}>
+      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 12, color: '#94a3b8' }}>
         #{number}
       </span>
       <span style={{ fontWeight: 600, fontSize: 12, color: colors.text, lineHeight: 1.2 }}>
         {student.regNo}
       </span>
       {student.name && (
-        <span style={{ fontSize: 9, color: '#64748b', lineHeight: 1.1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {student.name}
         </span>
       )}
@@ -87,8 +92,7 @@ const SeatingPlan = () => {
 
   useEffect(() => {
     if (!entryId) { setStep('configure'); return; }
-    const token = localStorage.getItem('token');
-    axios.get(`/api/seating-arrangement/by-entry/${entryId}`, { headers: { Authorization: `Bearer ${token}` } })
+    api.get(`/api/seating-arrangement/by-entry/${entryId}`)
       .then(res => {
         if (res.data.length) {
           const arr = res.data.map(r => ({ roomName: r.roomNumber, students: r.students.map(s => ({ regNo: s.regNo, name: s.studentName, category: s.category || '', seatNo: s.seatNo })) }));
@@ -121,10 +125,8 @@ const SeatingPlan = () => {
     setLoading(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.post('/api/seating-arrangement/generate-from-excel',
-        { entryId, rooms },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await api.post('/api/seating-arrangement/generate-from-excel',
+        { entryId, rooms }
       );
       setArrangements(res.data.arrangements);
       setSummary({ totalStudents: res.data.totalStudents, roomsUsed: res.data.roomsUsed });
@@ -139,8 +141,7 @@ const SeatingPlan = () => {
     setLoadingRooms(true);
     setError('');
     try {
-      const token = localStorage.getItem('token');
-      const res = await axios.get('/api/rooms', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await api.get('/api/rooms');
       if (!res.data.length) {
         setError('No saved rooms found. Add rooms in Room Management first.');
       } else {
@@ -150,10 +151,6 @@ const SeatingPlan = () => {
       setError(err.response?.data?.error || err.response?.data?.message || 'Failed to load rooms');
     }
     setLoadingRooms(false);
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   if (!entryId) {
@@ -174,7 +171,7 @@ const SeatingPlan = () => {
 
   return (
     <div className="max-w-5xl mx-auto p-6">
-      <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <m.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Seating Plan</h1>
         <p className="text-gray-500 mb-6">Configure rooms and generate a visual seating plan from uploaded student lists</p>
 
@@ -215,7 +212,7 @@ const SeatingPlan = () => {
             {rooms.length > 0 && (
               <div className="mb-4 space-y-2">
                 {rooms.map((r, i) => (
-                  <div key={i} className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
+                  <div key={r.name || i} className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg">
                     <span className="font-medium">{r.name}</span>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-gray-500">Capacity: {r.capacity}</span>
@@ -288,7 +285,7 @@ const SeatingPlan = () => {
 
             <div ref={printRef}>
               {arrangements.map((room, i) => (
-                <RoomPlan key={i} room={room} />
+                <RoomPlan key={room.roomName || `room-${i}`} room={room} />
               ))}
             </div>
           </>
@@ -301,7 +298,7 @@ const SeatingPlan = () => {
             .print\\:hidden { display: none !important; }
           }
         `}</style>
-      </motion.div>
+      </m.div>
     </div>
   );
 };

@@ -8,14 +8,6 @@ async function getSessionDeleteImpact(sessionDoc) {
   const entryIds = studentInputs.map((si) => si._id);
   const { start, end } = getUtcDayBounds(sessionDoc.date);
 
-  const seatingQuery = entryIds.length > 0
-    ? { entryRef: { $in: entryIds } }
-    : {
-        courseCode: sessionDoc.courseCode,
-        session: sessionDoc.session,
-        date: { $gte: start, $lte: end },
-      };
-
   const seatingCount = await SeatingArrangement.countDocuments(
     entryIds.length > 0
       ? {
@@ -28,7 +20,11 @@ async function getSessionDeleteImpact(sessionDoc) {
             },
           ],
         }
-      : seatingQuery
+      : {
+          courseCode: sessionDoc.courseCode,
+          session: sessionDoc.session,
+          date: { $gte: start, $lte: end },
+        }
   );
 
   const dateKey = formatDateKey(sessionDoc.date);
@@ -45,7 +41,7 @@ async function getSessionDeleteImpact(sessionDoc) {
     hasStudents,
     hasSeating,
     hasDuties,
-    hasAllocations: hasStudents || hasSeating,
+    hasAllocations: hasSeating || hasDuties,
     studentInputCount: studentInputs.length,
     seatingCount,
     dutyCount,
@@ -72,11 +68,8 @@ async function cleanupSessionRelatedData(sessionDoc) {
   });
   seatingDeleted += byCourse.deletedCount;
 
-  const studentInputsDeleted = studentInputs.length;
-  await StudentInput.deleteMany({ sessionRef: sessionDoc._id });
-
   let dutiesDeleted = 0;
-  if (impact.hasAllocations || impact.hasDuties) {
+  if (impact.hasSeating || impact.hasDuties) {
     const dutyResult = await Duty.deleteMany({
       date: dateKey,
       session: sessionDoc.session,
@@ -85,7 +78,7 @@ async function cleanupSessionRelatedData(sessionDoc) {
   }
 
   return {
-    studentInputsDeleted,
+    studentInputsPreserved: studentInputs.length,
     seatingDeleted,
     dutiesDeleted,
   };
