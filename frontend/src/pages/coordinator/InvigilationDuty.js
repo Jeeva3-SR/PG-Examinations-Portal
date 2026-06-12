@@ -3,6 +3,31 @@ import api from '../../lib/api';
 import { format } from 'date-fns';
 import { jsPDF } from 'jspdf';
 
+const generateAdvanceClaimLetter = (duty) => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(16);
+  doc.text('Advance Claim Request', pageWidth / 2, 20, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.text(`Faculty Name: ${duty.invigilator.name}`, 20, 50);
+  doc.text(`Department: ${duty.invigilator.department}`, 20, 60);
+  doc.text(`Employee ID: ${duty.invigilator.employeeId}`, 20, 70);
+  doc.text(`Date: ${format(new Date(duty.date), 'MMMM d, yyyy')}`, 20, 80);
+  doc.text(`Session: ${duty.session}`, 20, 90);
+  doc.text(`Room: ${duty.room}`, 20, 100);
+  doc.text(`Course: ${duty.courseCode.courseCode}`, 20, 110);
+
+  doc.setFontSize(10);
+  doc.text('Authorized Signature', 20, 150);
+  doc.text('Examination Cell', 20, 160);
+
+  doc.save(`Advance_Claim_${duty.invigilator.employeeId}.pdf`);
+};
+
 const InvigilationDuty = () => {
   const [duties, setDuties] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -74,35 +99,6 @@ const InvigilationDuty = () => {
     } catch (error) {
       console.error('Error updating duty status:', error);
     }
-  };
-
-  const generateAdvanceClaimLetter = (duty) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Header
-    doc.setFontSize(16);
-    doc.text('Advance Claim Request', pageWidth / 2, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
-
-    // Content
-    doc.setFontSize(10);
-    doc.text(`Faculty Name: ${duty.invigilator.name}`, 20, 50);
-    doc.text(`Department: ${duty.invigilator.department}`, 20, 60);
-    doc.text(`Employee ID: ${duty.invigilator.employeeId}`, 20, 70);
-    doc.text(`Date: ${format(new Date(duty.date), 'MMMM d, yyyy')}`, 20, 80);
-    doc.text(`Session: ${duty.session}`, 20, 90);
-    doc.text(`Room: ${duty.room}`, 20, 100);
-    doc.text(`Course: ${duty.courseCode.courseCode}`, 20, 110);
-
-    // Footer
-    doc.setFontSize(10);
-    doc.text('Authorized Signature', 20, 150);
-    doc.text('Examination Cell', 20, 160);
-
-    // Save the PDF
-    doc.save(`Advance_Claim_${duty.invigilator.employeeId}.pdf`);
   };
 
   return (

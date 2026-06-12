@@ -102,7 +102,7 @@ exports.generate = async (req, res) => {
       const studentCount = room.students.length;
       const invigilatorCount = Math.ceil(studentCount / 30);
       let assignedCount = 0;
-      const uniqueCourseCodes = [...new Set(room.students.map(s => s.courseCode && s.courseCode.toUpperCase()).filter(Boolean))];
+      const uniqueCourseCodes = [...new Set(room.students.flatMap(s => { const code = s.courseCode; return code ? [code.toUpperCase()] : []; }))];
 
       for (const code of uniqueCourseCodes) {
         const facultyList = facultyByCourseCode.get(code) || [];

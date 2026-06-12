@@ -25,7 +25,7 @@ const resolveCourseReference = async (ref) => {
 
 const resolveCourseReferences = async (refs = []) => {
   const results = await Promise.all(refs.map(ref => resolveCourseReference(ref)));
-  const resolvedSet = new Set(results.map(courseId => toIdString(courseId)).filter(Boolean));
+  const resolvedSet = new Set(results.flatMap(courseId => { const id = toIdString(courseId); return id ? [id] : []; }));
   return [...resolvedSet];
 };
 

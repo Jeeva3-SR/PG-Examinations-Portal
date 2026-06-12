@@ -44,7 +44,7 @@ const toCourseId = (course) => {
 
 const normalizeProfile = (data = {}, allCourses = []) => {
   const validCourseIds = new Set(allCourses.map(course => String(course._id)));
-  let courses = data.courses?.map(toCourseId).filter(Boolean) || [];
+  let courses = data.courses?.flatMap(c => { const id = toCourseId(c); return id ? [id] : []; }) || [];
 
   if (validCourseIds.size > 0) {
     courses = courses.filter(courseId => validCourseIds.has(String(courseId)));
