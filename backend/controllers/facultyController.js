@@ -31,13 +31,15 @@ const resolveCourseReferences = async (refs = []) => {
 
 const buildProfileResponse = async (facultyDoc) => {
   const faculty = facultyDoc?.toObject ? facultyDoc.toObject() : facultyDoc;
-  const resolvedCourses = await resolveCourseReferences(faculty.courses || []);
-  const resolvedClasses = await Promise.all((faculty.classesHandled || []).map(async (cls) => ({
-    semester: cls.semester || '',
-    section: cls.section || '',
-    year: cls.year || '',
-    course: toIdString(await resolveCourseReference(cls.course))
-  })));
+  const [resolvedCourses, resolvedClasses] = await Promise.all([
+    resolveCourseReferences(faculty.courses || []),
+    Promise.all((faculty.classesHandled || []).map(async (cls) => ({
+      semester: cls.semester || '',
+      section: cls.section || '',
+      year: cls.year || '',
+      course: toIdString(await resolveCourseReference(cls.course))
+    })))
+  ]);
 
   return {
     ...faculty,

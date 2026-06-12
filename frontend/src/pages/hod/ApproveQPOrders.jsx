@@ -17,6 +17,146 @@ import {
   FileText
 } from 'lucide-react';
 
+const generatePdfBlobUrl = (order) => {
+  const doc = new jsPDF();
+  const courseData = order.courseCode || {};
+
+  const facultyName = order.facultyName || 'Assigned Faculty';
+  const courseCode = courseData.courseCode || order.courseCode || 'N/A';
+  const courseName = courseData.courseName || order.courseName || 'Unnamed Subject';
+  const specialization = order.specialization || 'CSE';
+  const regulation = order.regulation || '2023';
+  const examMonth = order.examMonth || 'JUNE 2026';
+  const lastDateToSubmit = order.lastDateToSubmit || new Date();
+  const type = order.type || 'regular';
+
+  doc.setFont('times', 'normal');
+
+  // Headers & Institutional Headings
+  doc.setFontSize(12);
+  doc.setFont('times', 'bold');
+  doc.text('DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING', 105, 18, { align: 'center' });
+  doc.text('COLLEGE OF ENGINEERING, GUINDY CAMPUS', 105, 25, { align: 'center' });
+  doc.text('ANNA UNIVERSITY:: CHENNAI - 600 025.', 105, 32, { align: 'center' });
+  doc.setFontSize(11);
+  doc.text(`PG (FT) & Ph.D ${type.toUpperCase()} EXAMINATIONS – ${examMonth.toUpperCase()}`, 105, 42, { align: 'center' });
+
+  doc.setFont('times', 'normal');
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB').replace(/\//g, '.')}`, 185, 52, { align: 'right' });
+
+  doc.text('To', 14, 62);
+  doc.setFont('times', 'bold');
+  doc.text(facultyName, 24, 72);
+  doc.setFont('times', 'normal');
+  doc.text('Department of Computer Science and Engineering,', 24, 79);
+  doc.text('CEG Campus,', 24, 86);
+  doc.text('Anna University, Chennai 600 025.', 24, 93);
+
+  doc.text('Sir/Madam,', 14, 105);
+  doc.setFont('times', 'bold');
+  doc.text('Sub:', 25, 115);
+  doc.setFont('times', 'normal');
+  doc.text(`PG (FT) – ${type.charAt(0).toUpperCase() + type.slice(1)} Examination ${examMonth.toUpperCase()} – Appointment of`, 35, 115);
+  doc.text('Question Paper Setter – Reg.', 35, 122);
+
+  const bodyText1 = `It is informed that, you are appointed as Question Paper Setter for the Examinations to be held in ${examMonth.toUpperCase()} for the subject whose details are given below:`;
+  doc.text(bodyText1, 14, 135, { maxWidth: 180 });
+
+  // Table 1: Course Criteria
+  autoTable(doc, {
+    startY: 145,
+    theme: 'grid',
+    styles: { lineColor: [0,0,0], lineWidth: 0.1, fontSize: 10, cellPadding: 2, font: 'times' },
+    head: [['DEGREE', 'BRANCH', 'DURATION', 'MAX. MARKS', 'REGULATION']],
+    body: [['M.E.', specialization, '3 Hrs.', '100', regulation]],
+    headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', halign: 'center' },
+    bodyStyles: { halign: 'center' },
+  });
+
+  // Table 2: Allocation Matrix
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 5,
+    theme: 'grid',
+    styles: { lineColor: [0,0,0], lineWidth: 0.1, font: 'times' },
+    head: [['Sl.No', 'Subject Code and Subject Title', type.toLowerCase() === 'regular' ? 'Last Date to submit the Question Paper' : 'Total copies / Last Submission Date']],
+    body: [[
+      '1.',
+      `${courseCode} - ${courseName}`,
+      type.toLowerCase() === 'regular'
+        ? new Date(lastDateToSubmit).toLocaleDateString('en-GB').replace(/\//g, '.')
+        : `50 Copies / ${new Date(lastDateToSubmit).toLocaleDateString('en-GB').replace(/\//g, '.')}`
+    ]],
+    headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', halign: 'center', fontSize: 10 },
+    bodyStyles: { halign: 'center', fontSize: 10 },
+  });
+
+  // Closures
+  const bodyText2 = `You are requested to prepare the question paper with required number of copies, securely sealed in a cover, along with two additional copies placed in a separate sealed cover, and hand over both the covers to Dr. C. Valliyammai, Professor, Chief Superintendent (P.G. Examinations), in the Department of Computer Science and Engineering.`;
+  const bodyText3 = `Your kind cooperation is requested for the smooth and successful conduct of examination as per schedule.`;
+
+  let finalY = doc.lastAutoTable.finalY;
+  doc.setFontSize(11);
+  doc.text(bodyText2, 14, finalY + 12, { maxWidth: 180 });
+  doc.text(bodyText3, 14, finalY + 38, { maxWidth: 180 });
+
+  // ========================================================
+  // COMPACT GOVERNMENT STYLE DIGITAL VERIFICATION BOX (FIXED)
+  // ========================================================
+  const boxWidth = 54;
+  const boxHeight = 15;
+  const boxX = 14;
+  const boxY = finalY + 55;
+
+  if (order.status === 'Approved') {
+    doc.setDrawColor(16, 185, 129); // Emerald Green
+    doc.setFillColor(240, 253, 250); // Light Mint background
+    doc.setLineWidth(0.2);
+    doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 1, 1, 'FD');
+
+    // FIXED: Draw Checkmark using vector path lines to prevent character corruption
+    doc.setDrawColor(5, 150, 105);
+    doc.setLineWidth(0.6);
+    doc.line(boxX + 3, boxY + 7.5, boxX + 4.5, boxY + 9.5); // Short downward stroke
+    doc.line(boxX + 4.5, boxY + 9.5, boxX + 7.5, boxY + 5.5); // Long upward stroke
+
+    // Metadata Text
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Digitally Approved & Verified by', boxX + 10, boxY + 6);
+    doc.setFont('times', 'bold');
+    doc.text('Head of the Department, CSE', boxX + 10, boxY + 10);
+  } else {
+    doc.setDrawColor(217, 119, 6); // Amber Gold
+    doc.setFillColor(255, 251, 235); // Amber tint background
+    doc.setLineWidth(0.2);
+    doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 1, 1, 'FD');
+
+    // Question Mark (Safe standard character)
+    doc.setFont('times', 'bold');
+    doc.setFontSize(11);
+    doc.setTextColor(217, 119, 6);
+    doc.text('?', boxX + 4, boxY + 8.5);
+
+    // Metadata Text
+    doc.setFont('times', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(30, 41, 59);
+    doc.text('Pending Verification:', boxX + 10, boxY + 6);
+    doc.setFont('times', 'italic');
+    doc.setTextColor(100, 116, 139);
+    doc.text('Awaiting HOD Digital Clearance', boxX + 10, boxY + 10);
+  }
+
+  // Reset baseline styling colors
+  doc.setTextColor(0, 0, 0);
+  doc.setFont('times', 'bold');
+  doc.setFontSize(11);
+  doc.text('Head of the department', 185, finalY + 70, { align: 'right' });
+
+  return doc.output('bloburl');
+};
+
 const ApproveQPOrders = () => {
   const [orders, setOrders] = useState([]);
   const [assignedQPSetters, setAssignedQPSetters] = useState([]);
@@ -66,148 +206,6 @@ const ApproveQPOrders = () => {
     setSelectedOrders(prev =>
       prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
     );
-  };
-
-  // High-fidelity jsPDF Document compiler with safe string encoding values
-// High-fidelity jsPDF Document compiler with safe string encoding values
-  const generatePdfBlobUrl = (order) => {
-    const doc = new jsPDF();
-    const courseData = order.courseCode || {};
-    
-    const facultyName = order.facultyName || 'Assigned Faculty';
-    const courseCode = courseData.courseCode || order.courseCode || 'N/A';
-    const courseName = courseData.courseName || order.courseName || 'Unnamed Subject';
-    const specialization = order.specialization || 'CSE';
-    const regulation = order.regulation || '2023';
-    const examMonth = order.examMonth || 'JUNE 2026';
-    const lastDateToSubmit = order.lastDateToSubmit || new Date();
-    const type = order.type || 'regular';
-
-    doc.setFont('times', 'normal');
-
-    // Headers & Institutional Headings
-    doc.setFontSize(12);
-    doc.setFont('times', 'bold');
-    doc.text('DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING', 105, 18, { align: 'center' });
-    doc.text('COLLEGE OF ENGINEERING, GUINDY CAMPUS', 105, 25, { align: 'center' });
-    doc.text('ANNA UNIVERSITY:: CHENNAI - 600 025.', 105, 32, { align: 'center' });
-    doc.setFontSize(11);
-    doc.text(`PG (FT) & Ph.D ${type.toUpperCase()} EXAMINATIONS – ${examMonth.toUpperCase()}`, 105, 42, { align: 'center' });
-
-    doc.setFont('times', 'normal');
-    doc.text(`Date: ${new Date().toLocaleDateString('en-GB').replace(/\//g, '.')}`, 185, 52, { align: 'right' });
-
-    doc.text('To', 14, 62);
-    doc.setFont('times', 'bold');
-    doc.text(facultyName, 24, 72);
-    doc.setFont('times', 'normal');
-    doc.text('Department of Computer Science and Engineering,', 24, 79);
-    doc.text('CEG Campus,', 24, 86);
-    doc.text('Anna University, Chennai 600 025.', 24, 93);
-
-    doc.text('Sir/Madam,', 14, 105);
-    doc.setFont('times', 'bold');
-    doc.text('Sub:', 25, 115);
-    doc.setFont('times', 'normal');
-    doc.text(`PG (FT) – ${type.charAt(0).toUpperCase() + type.slice(1)} Examination ${examMonth.toUpperCase()} – Appointment of`, 35, 115);
-    doc.text('Question Paper Setter – Reg.', 35, 122);
-
-    const bodyText1 = `It is informed that, you are appointed as Question Paper Setter for the Examinations to be held in ${examMonth.toUpperCase()} for the subject whose details are given below:`;
-    doc.text(bodyText1, 14, 135, { maxWidth: 180 });
-
-    // Table 1: Course Criteria
-    autoTable(doc, {
-      startY: 145,
-      theme: 'grid',
-      styles: { lineColor: [0,0,0], lineWidth: 0.1, fontSize: 10, cellPadding: 2, font: 'times' },
-      head: [['DEGREE', 'BRANCH', 'DURATION', 'MAX. MARKS', 'REGULATION']],
-      body: [['M.E.', specialization, '3 Hrs.', '100', regulation]],
-      headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', halign: 'center' },
-      bodyStyles: { halign: 'center' },
-    });
-    
-    // Table 2: Allocation Matrix
-    autoTable(doc, {
-      startY: doc.lastAutoTable.finalY + 5,
-      theme: 'grid',
-      styles: { lineColor: [0,0,0], lineWidth: 0.1, font: 'times' },
-      head: [['Sl.No', 'Subject Code and Subject Title', type.toLowerCase() === 'regular' ? 'Last Date to submit the Question Paper' : 'Total copies / Last Submission Date']],
-      body: [[
-        '1.', 
-        `${courseCode} - ${courseName}`, 
-        type.toLowerCase() === 'regular' 
-          ? new Date(lastDateToSubmit).toLocaleDateString('en-GB').replace(/\//g, '.')
-          : `50 Copies / ${new Date(lastDateToSubmit).toLocaleDateString('en-GB').replace(/\//g, '.')}`
-      ]],
-      headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', halign: 'center', fontSize: 10 },
-      bodyStyles: { halign: 'center', fontSize: 10 },
-    });
-
-    // Closures
-    const bodyText2 = `You are requested to prepare the question paper with required number of copies, securely sealed in a cover, along with two additional copies placed in a separate sealed cover, and hand over both the covers to Dr. C. Valliyammai, Professor, Chief Superintendent (P.G. Examinations), in the Department of Computer Science and Engineering.`;
-    const bodyText3 = `Your kind cooperation is requested for the smooth and successful conduct of examination as per schedule.`;
-    
-    let finalY = doc.lastAutoTable.finalY;
-    doc.setFontSize(11);
-    doc.text(bodyText2, 14, finalY + 12, { maxWidth: 180 });
-    doc.text(bodyText3, 14, finalY + 38, { maxWidth: 180 });
-
-    // ========================================================
-    // COMPACT GOVERNMENT STYLE DIGITAL VERIFICATION BOX (FIXED)
-    // ========================================================
-    const boxWidth = 54;
-    const boxHeight = 15;
-    const boxX = 14;
-    const boxY = finalY + 55;
-
-    if (order.status === 'Approved') {
-      doc.setDrawColor(16, 185, 129); // Emerald Green
-      doc.setFillColor(240, 253, 250); // Light Mint background
-      doc.setLineWidth(0.2);
-      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 1, 1, 'FD');
-
-      // FIXED: Draw Checkmark using vector path lines to prevent character corruption
-      doc.setDrawColor(5, 150, 105);
-      doc.setLineWidth(0.6);
-      doc.line(boxX + 3, boxY + 7.5, boxX + 4.5, boxY + 9.5); // Short downward stroke
-      doc.line(boxX + 4.5, boxY + 9.5, boxX + 7.5, boxY + 5.5); // Long upward stroke
-
-      // Metadata Text
-      doc.setFont('times', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(30, 41, 59);
-      doc.text('Digitally Approved & Verified by', boxX + 10, boxY + 6);
-      doc.setFont('times', 'bold');
-      doc.text('Head of the Department, CSE', boxX + 10, boxY + 10);
-    } else {
-      doc.setDrawColor(217, 119, 6); // Amber Gold
-      doc.setFillColor(255, 251, 235); // Amber tint background
-      doc.setLineWidth(0.2);
-      doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 1, 1, 'FD');
-
-      // Question Mark (Safe standard character)
-      doc.setFont('times', 'bold');
-      doc.setFontSize(11);
-      doc.setTextColor(217, 119, 6);
-      doc.text('?', boxX + 4, boxY + 8.5);
-
-      // Metadata Text
-      doc.setFont('times', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(30, 41, 59);
-      doc.text('Pending Verification:', boxX + 10, boxY + 6);
-      doc.setFont('times', 'italic');
-      doc.setTextColor(100, 116, 139);
-      doc.text('Awaiting HOD Digital Clearance', boxX + 10, boxY + 10);
-    }
-
-    // Reset baseline styling colors
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('times', 'bold');
-    doc.setFontSize(11);
-    doc.text('Head of the department', 185, finalY + 70, { align: 'right' });
-
-    return doc.output('bloburl');
   };
 
   const handleOpenViewer = (order) => {

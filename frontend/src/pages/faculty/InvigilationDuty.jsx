@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import useAuthStore from '../../store/useAuthStore';
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const year = date.getUTCFullYear();
+  return `${day}-${month}-${year}`;
+};
+
 const InvigilationDuty = () => {
   const user = useAuthStore((s) => s.user);
   const [duties, setDuties] = useState([]);
@@ -54,15 +63,6 @@ const InvigilationDuty = () => {
       setStatusLoading(prev => ({ ...prev, [dutyId]: false }));
     }
   };
-
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const day = String(date.getUTCDate()).padStart(2, '0');
-    const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-    const year = date.getUTCFullYear();
-    return `${day}-${month}-${year}`;
-  }
 
   return (
     <div className="bg-white rounded-lg shadow p-6">

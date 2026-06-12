@@ -4,6 +4,10 @@ import useAuthStore from '../../store/useAuthStore';
 import { useSearchParams } from 'react-router-dom';
 import { m } from 'framer-motion';
 
+const handlePrint = () => {
+  window.print();
+};
+
 const CATEGORY_COLORS = {
   'CEG Regular': { bg: '#e0f2fe', border: '#0284c7', text: '#0369a1' },
   'CEG Arrear': { bg: '#fef3c7', border: '#d97706', text: '#92400e' },
@@ -22,14 +26,14 @@ const SeatCard = ({ student, number }) => {
         padding: '2px 4px', fontSize: 12, position: 'relative',
       }}
     >
-      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 10, color: '#94a3b8' }}>
+      <span style={{ position: 'absolute', top: 2, left: 4, fontSize: 12, color: '#94a3b8' }}>
         #{number}
       </span>
       <span style={{ fontWeight: 600, fontSize: 12, color: colors.text, lineHeight: 1.2 }}>
         {student.regNo}
       </span>
       {student.name && (
-        <span style={{ fontSize: 10, color: '#64748b', lineHeight: 1.1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 12, color: '#64748b', lineHeight: 1.1, maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {student.name}
         </span>
       )}
@@ -147,10 +151,6 @@ const SeatingPlan = () => {
       setError(err.response?.data?.error || err.response?.data?.message || 'Failed to load rooms');
     }
     setLoadingRooms(false);
-  };
-
-  const handlePrint = () => {
-    window.print();
   };
 
   if (!entryId) {

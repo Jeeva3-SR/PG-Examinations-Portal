@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import api from '../../lib/api';
 import { m } from 'framer-motion';
 
+const handleSendToFaculty = (orderId) => {
+  alert('Letter sent to faculty!');
+};
 
 const AssignQPSetter = () => {
   const [courses, setCourses] = useState([]);
@@ -132,11 +135,6 @@ const AssignQPSetter = () => {
         order.facultyId === row.facultyId &&
         order.courseName === row.courseName
     );
-  };
-
-  const handleSendToFaculty = (orderId) => {
-    // Placeholder: implement actual send logic (e.g., email, notification)
-    alert('Letter sent to faculty!');
   };
 
   return (

@@ -4,6 +4,12 @@ import { m } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, UserCheck } from 'lucide-react';
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.split('T')[0].split('-');
+  return `${day}-${month}-${year}`;
+};
+
 const DutyAssignment = () => {
     const [searchParams] = useSearchParams();
     const [dateSessions, setDateSessions] = useState([]);
@@ -153,12 +159,6 @@ const DutyAssignment = () => {
             alert('Failed to update status.');
             console.error(err);
         }
-    };
-
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        const [year, month, day] = dateStr.split('T')[0].split('-');
-        return `${day}-${month}-${year}`;
     };
 
     const getDutiesForRoom = (room) => {

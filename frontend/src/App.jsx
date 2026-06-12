@@ -50,13 +50,13 @@
   import AllFaculties from './pages/AllFaculties';
   import AllSubjects from './pages/AllSubjects';
 
+  const publicRoutes = ['/', '/login', '/hod/login', '/about', '/forgot-password'];
+
   const AppContent = () => {
     const location = useLocation();
     const hydrate = useAuthStore((s) => s.hydrate);
 
     useEffect(() => { hydrate(); }, [hydrate]);
-
-    const publicRoutes = ['/', '/login', '/hod/login', '/about', '/forgot-password'];
     const isFullWidthPage = 
       publicRoutes.includes(location.pathname) || 
       location.pathname === '/faculty/register' ||

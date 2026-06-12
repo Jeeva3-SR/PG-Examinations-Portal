@@ -5,6 +5,31 @@ import { jsPDF } from 'jspdf';
 import { Link } from 'react-router-dom';
 import { m } from 'framer-motion';
 
+const generateClaimLetter = (claim) => {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+
+  doc.setFontSize(16);
+  doc.text('Claim Letter', pageWidth / 2, 20, { align: 'center' });
+  doc.setFontSize(12);
+  doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
+
+  doc.setFontSize(10);
+  doc.text(`Faculty Name: ${claim.faculty?.name || 'N/A'}`, 20, 50);
+  doc.text(`Department: ${claim.faculty?.department || 'N/A'}`, 20, 60);
+  doc.text(`Employee ID: ${claim.faculty?.employeeId || 'N/A'}`, 20, 70);
+  doc.text(`Claim Period: ${claim.startDate ? format(new Date(claim.startDate), 'MMMM d, yyyy') : 'N/A'} to ${claim.endDate ? format(new Date(claim.endDate), 'MMMM d, yyyy') : 'N/A'}`, 20, 80);
+  doc.text(`Total Duties: ${claim.totalDuties || 'N/A'}`, 20, 90);
+  doc.text(`Total Amount: ₹${claim.totalAmount || 'N/A'}`, 20, 100);
+  doc.text(`Bank Account: ${claim.bankAccount || 'N/A'}`, 20, 110);
+  doc.text(`IFSC Code: ${claim.ifscCode || 'N/A'}`, 20, 120);
+
+  doc.setFontSize(10);
+  doc.text('Authorized Signature', 20, 150);
+  doc.text('Examination Cell', 20, 160);
+
+  doc.save(`Claim_${claim.faculty?.employeeId || 'letter'}.pdf`);
+};
 
 const dutyTypeOptions = [
   'Invigilation',
@@ -89,36 +114,6 @@ const Claims = () => {
     } catch (error) {
       console.error('Error generating claims:', error);
     }
-  };
-
-  const generateClaimLetter = (claim) => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    // Header
-    doc.setFontSize(16);
-    doc.text('Claim Letter', pageWidth / 2, 20, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('Examination Cell', pageWidth / 2, 30, { align: 'center' });
-
-    // Content
-    doc.setFontSize(10);
-    doc.text(`Faculty Name: ${claim.faculty.name}`, 20, 50);
-    doc.text(`Department: ${claim.faculty.department}`, 20, 60);
-    doc.text(`Employee ID: ${claim.faculty.employeeId}`, 20, 70);
-    doc.text(`Claim Period: ${format(new Date(claim.startDate), 'MMMM d, yyyy')} to ${format(new Date(claim.endDate), 'MMMM d, yyyy')}`, 20, 80);
-    doc.text(`Total Duties: ${claim.totalDuties}`, 20, 90);
-    doc.text(`Total Amount: ₹${claim.totalAmount}`, 20, 100);
-    doc.text(`Bank Account: ${claim.bankAccount}`, 20, 110);
-    doc.text(`IFSC Code: ${claim.ifscCode}`, 20, 120);
-
-    // Footer
-    doc.setFontSize(10);
-    doc.text('Authorized Signature', 20, 150);
-    doc.text('Examination Cell', 20, 160);
-
-    // Save the PDF
-    doc.save(`Claim_${claim.faculty.employeeId}.pdf`);
   };
 
   return (

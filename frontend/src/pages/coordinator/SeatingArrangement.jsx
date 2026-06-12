@@ -16,6 +16,32 @@ import {
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+const sessionOptions = [
+  { value: 'FN', label: 'FN' },
+  { value: 'AN', label: 'AN' }
+];
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.3
+    }
+  }
+};
+
 const SeatingArrangement = () => {
   const navigate = useNavigate();
   const [date, setDate] = useState('');
@@ -26,11 +52,6 @@ const SeatingArrangement = () => {
   const [arrangements, setArrangements] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-
-  const sessionOptions = [
-    { value: 'FN', label: 'FN' },
-    { value: 'AN', label: 'AN' }
-  ];
 
   useEffect(() => {
     fetchRooms();
@@ -121,27 +142,6 @@ const SeatingArrangement = () => {
     });
 
     doc.save('seating-arrangement.pdf');
-  };
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.3
-      }
-    }
   };
 
   return (

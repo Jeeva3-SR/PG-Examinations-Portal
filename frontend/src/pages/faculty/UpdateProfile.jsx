@@ -166,12 +166,14 @@ const UpdateProfile = () => {
     setProfile({ ...profile, classesHandled: arr });
   };
   
+  let nextClassId = Date.now();
   const addClass = () =>
   setProfile({
     ...profile,
     classesHandled: [
       ...profile.classesHandled,
       {
+        _key: nextClassId++,
         course: '',
         semester: '',
         section: '',
@@ -452,7 +454,7 @@ const UpdateProfile = () => {
             
             <div className="space-y-3">
               {profile.classesHandled.map((cls, idx) => (
-                <div key={`class-${idx}`} className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-slate-50/50 border border-slate-200/60 p-4 rounded-xl relative group">
+                <div key={cls._key || `class-${idx}`} className="flex flex-col md:flex-row items-stretch md:items-center gap-3 bg-slate-50/50 border border-slate-200/60 p-4 rounded-xl relative group">
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 flex-grow">
                     <select
                       value={String(cls.course || '')}

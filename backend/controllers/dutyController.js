@@ -93,6 +93,10 @@ exports.generate = async (req, res) => {
         facultyByCourseCode.get(key).push(f);
       }
     }
+    const courseCodeIndexes = new Map();
+    for (const [code] of facultyByCourseCode) {
+      courseCodeIndexes.set(code, 0);
+    }
 
     for (const room of seatingArrangements) {
       const studentCount = room.students.length;
@@ -101,7 +105,16 @@ exports.generate = async (req, res) => {
       const uniqueCourseCodes = [...new Set(room.students.map(s => s.courseCode && s.courseCode.toUpperCase()).filter(Boolean))];
 
       for (const code of uniqueCourseCodes) {
-        const handlingFaculty = (facultyByCourseCode.get(code) || []).find(f => !assignedFacultyIds.has(f.facultyId));
+        const facultyList = facultyByCourseCode.get(code) || [];
+        let handlingFaculty = null;
+        const startIdx = courseCodeIndexes.get(code) || 0;
+        for (let i = startIdx; i < facultyList.length; i++) {
+          if (!assignedFacultyIds.has(facultyList[i].facultyId)) {
+            handlingFaculty = facultyList[i];
+            courseCodeIndexes.set(code, i + 1);
+            break;
+          }
+        }
         if (handlingFaculty) {
           duties.push(new Duty({
             facultyId: handlingFaculty.facultyId,

@@ -13,9 +13,7 @@ import {
   Library
 } from 'lucide-react';
 
-const Dashboard = () => {
-  // Upgraded modules structure configuration matching the premium layout look
-  const modules = [
+const modules = [
     {
       title: 'Student Input System',
       description: 'Manage student profile parameters, batches, and master course registrations.',
@@ -81,7 +79,7 @@ const Dashboard = () => {
     }
   ];
 
-  const containerVariants = {
+const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -91,7 +89,7 @@ const Dashboard = () => {
     }
   };
 
-  const itemVariants = {
+const itemVariants = {
     hidden: { opacity: 0, y: 15 },
     visible: {
       opacity: 1,
@@ -100,6 +98,7 @@ const Dashboard = () => {
     }
   };
 
+const Dashboard = () => {
   return (
     // FIXED: Removed the local duplicate <Sidebar> wrapper completely so it doesn't double-render headers!
     <div className="space-y-8 animate-fadeIn text-left">

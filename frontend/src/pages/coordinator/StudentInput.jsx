@@ -4,6 +4,14 @@ import useAuthStore from '../../store/useAuthStore';
 import { m } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
+const parseCount = (value) => {
+  if (value === null || value === undefined || value === '') {
+    return 0;
+  }
+  const parsed = parseInt(value);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
 const StudentInput = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -134,15 +142,6 @@ const StudentInput = () => {
       ...prev,
       [name]: value
     }));
-  };
-
-  // Helper function to convert null/empty values to 0
-  const parseCount = (value) => {
-    if (value === null || value === undefined || value === '') {
-      return 0;
-    }
-    const parsed = parseInt(value);
-    return isNaN(parsed) ? 0 : parsed;
   };
 
   const handleEditClick = (entry) => {
