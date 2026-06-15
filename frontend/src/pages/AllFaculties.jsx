@@ -6,16 +6,20 @@ const AllFaculties = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetch = async () => {
-      try {
-        const res = await api.get('/api/users');
-        setUsers(res.data.filter(u => u.role === 'faculty'));
-      } catch {} finally {
-        setLoading(false);
-      }
-    };
-    fetch();
-  }, []);
+  const fetchFaculties = async () => {
+    try {
+      const res = await api.get('/api/faculty');
+      console.log(res.data); // check response
+      setUsers(res.data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchFaculties();
+}, []);
 
   if (loading) return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
 
@@ -43,7 +47,7 @@ const AllFaculties = () => {
                 <tr key={u._id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="py-4 px-6 text-sm font-semibold text-slate-800">{u.name}</td>
                   <td className="py-4 px-6 text-sm text-slate-600">{u.email}</td>
-                  <td className="py-4 px-6 text-sm font-mono text-indigo-600 font-bold">{u.userId || u.employeeId}</td>
+                  <td className="py-4 px-6 text-sm font-mono text-indigo-600 font-bold">{u.facultyId || u.employeeId}</td>
                   <td className="py-4 px-6 text-sm text-slate-600">{u.department || '-'}</td>
                 </tr>
               ))}

@@ -5,9 +5,7 @@ import { m } from 'framer-motion';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 
 const parseCount = (value) => {
-  if (value === null || value === undefined || value === '') {
-    return 0;
-  }
+  if (value === null || value === undefined || value === '') return 0;
   const parsed = parseInt(value);
   return isNaN(parsed) ? 0 : parsed;
 };
@@ -70,8 +68,7 @@ const StudentInput = () => {
 
   useEffect(() => {
     if (sessions.length > 0) {
-      // Extract unique specializations and add M.E.
-      const uniqueSpecializations = [...new Set([...sessions.map(session => session.specialization), 'M.E.'])];
+      const uniqueSpecializations = [...new Set([...sessions.map(session => session.specialization), 'M.E'])];
       setSpecializations(uniqueSpecializations);
     }
   }, [sessions]);
@@ -79,9 +76,7 @@ const StudentInput = () => {
   useEffect(() => {
     if (selectedCourseCode) {
       const course = courses.find(c => c.courseCode === selectedCourseCode);
-      if (course) {
-        setSelectedCourseName(course.courseName);
-      }
+      if (course) setSelectedCourseName(course.courseName);
       const session = sessions.find(s => s.courseCode === selectedCourseCode);
       setSelectedSession(session || null);
     } else {
@@ -91,7 +86,6 @@ const StudentInput = () => {
   }, [selectedCourseCode, courses, sessions]);
 
   useEffect(() => {
-    // Calculate totals whenever any student count changes
     const cegRegular = parseInt(formData.cegRegular) || 0;
     const cegArrear = parseInt(formData.cegArrear) || 0;
     const mitRegular = parseInt(formData.mitRegular) || 0;
@@ -138,10 +132,7 @@ const StudentInput = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleEditClick = (entry) => {
@@ -158,7 +149,6 @@ const StudentInput = () => {
   };
 
   const handleOpenUploadModal = (entry) => {
-    console.log('[StudentInput] Opening upload modal for entry:', entry._id);
     setUploadModalEntry(entry);
     setLocalStatuses({
       cegRegularStatus: entry.cegRegularStatus || 'pending',
@@ -189,9 +179,7 @@ const StudentInput = () => {
 
   const handleUploadOrSkip = async (field, status) => {
     try {
-      const res = await api.patch(`/api/student-inputs/${uploadModalEntry._id}/status`,
-        { field, status }
-      );
+      const res = await api.patch(`/api/student-inputs/${uploadModalEntry._id}/status`, { field, status });
       setLocalStatuses(prev => ({ ...prev, [field]: status }));
       setEntries(entries.map(e => e._id === uploadModalEntry._id ? res.data : e));
     } catch (error) {
@@ -206,17 +194,13 @@ const StudentInput = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!selectedSpecialization || !selectedCourseCode || !selectedCourseName) {
       alert('Please fill in all required fields (Specialization, Course, and Course Name)');
       return;
     }
 
-    // Normalize numeric values
     const normalize = (val) => {
-      if (val === null || val === undefined || val === '') {
-        return 0;
-      }
+      if (val === null || val === undefined || val === '') return 0;
       const parsed = parseInt(val);
       return isNaN(parsed) ? 0 : parsed;
     };
@@ -226,7 +210,6 @@ const StudentInput = () => {
     const mitRegular = normalize(formData.mitRegular);
     const mitArrear = normalize(formData.mitArrear);
 
-    // Calculate totals
     const totalRegular = cegRegular + mitRegular;
     const totalArrear = cegArrear + mitArrear;
     const total = totalRegular + totalArrear;
@@ -250,7 +233,6 @@ const StudentInput = () => {
     try {
       let savedEntry;
       if (editingId) {
-        // Update existing entry
         const response = await api.put(`/api/student-inputs/${editingId}`, entryData);
         savedEntry = response.data;
         setEntries(entries.map(entry => entry._id === editingId ? savedEntry : entry));
@@ -260,10 +242,7 @@ const StudentInput = () => {
         savedEntry = response.data;
         setEntries([...entries, savedEntry]);
       }
-      
-      console.log('Entry saved successfully:', savedEntry);
 
-      // Clear form
       setSelectedSpecialization('');
       setSelectedCourseCode('');
       setSelectedCourseName('');
@@ -277,358 +256,378 @@ const StudentInput = () => {
         totalArrear: 0
       });
       setSelectedSession(null);
-
     } catch (error) {
       console.error('Error saving entry:', error);
       alert(error.message || 'Failed to save entry. Please try again.');
     }
   };
 
-  // Calculate CEG and MIT totals for summary fields
   const totalCEG = (parseInt(formData.cegRegular) || 0) + (parseInt(formData.cegArrear) || 0);
   const totalMIT = (parseInt(formData.mitRegular) || 0) + (parseInt(formData.mitArrear) || 0);
 
   return (
     <>
-      <div className="max-w-4xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+        {/* Header Section */}
         <m.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="text-center mb-8"
+          transition={{ duration: 0.4 }}
+          className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-slate-200 pb-5 gap-4"
         >
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Student Input</h1>
-          <p className="text-gray-600">Enter student counts for each category</p>
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Student Input Management</h1>
+            <p className="mt-1 text-sm text-slate-500">Configure core specialization and student details here.</p>
+          </div>
         </m.div>
 
+        {/* Input Form Card */}
         <m.form
           onSubmit={handleSubmit}
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.5, ease: 'easeOut' }}
-          className="bg-white rounded-lg shadow-md p-6 mb-8"
+          transition={{ delay: 0.1, duration: 0.4 }}
+          className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
         >
-          {/* Specialization Dropdown */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Specialization
-            </label>
-            <select
-              value={selectedSpecialization}
-              onChange={(e) => setSelectedSpecialization(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select Specialization</option>
-              {specializations.map((spec, index) => (
-                <option key={spec || index} value={spec}>
-                  {spec}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Course Code Dropdown */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Course Code - Course
-            </label>
-            <select
-              value={selectedCourseCode}
-              onChange={(e) => setSelectedCourseCode(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select Course</option>
-              {courses.map((c) => (
-                <option key={c._id} value={c.courseCode}>
-                  {c.courseCode} - {c.courseName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Student Count Inputs */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="p-6 space-y-6">
+            {/* Section 1: Course Info */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                CEG Regular
-              </label>
-              <input
-                type="number"
-                name="cegRegular"
-                value={formData.cegRegular}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                min="0"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                CEG Arrear
-              </label>
-              <input
-                type="number"
-                name="cegArrear"
-                value={formData.cegArrear}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                min="0"
-                required
-              />
-            </div>
-            {/* Total CEG Students (Read-only) */}
-            <div className="col-span-2 flex flex-col sm:flex-row items-stretch gap-4">
-              <div className="w-full sm:w-1/2">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Total CEG Students</label>
-                <input
-                  type="number"
-                  value={totalCEG}
-                  readOnly
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold shadow-sm"
-                  tabIndex={-1}
-                />
+              <h2 className="text-base font-semibold text-slate-900 mb-4">Course Allocation details</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+                    Specialization
+                  </label>
+                  <select
+                    value={selectedSpecialization}
+                    onChange={(e) => setSelectedSpecialization(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    required
+                  >
+                    <option value="">Select Specialization</option>
+                    {specializations.map((spec, index) => (
+                      <option key={spec || index} value={spec}>{spec}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
+                    Course Selection
+                  </label>
+                  <select
+                    value={selectedCourseCode}
+                    onChange={(e) => setSelectedCourseCode(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none"
+                    required
+                  >
+                    <option value="">Choose Course</option>
+                    {courses.map((c) => (
+                      <option key={c._id} value={c.courseCode}>
+                        {c.courseCode} — {c.courseName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
+
+            <hr className="border-slate-200" />
+
+            {/* Section 2: Student Data Count Matrix */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                MIT Regular
-              </label>
-              <input
-                type="number"
-                name="mitRegular"
-                value={formData.mitRegular}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                min="0"
-                required
-              />
+              <h2 className="text-base font-semibold text-slate-900 mb-4">Student Counts </h2>
+              <div className="space-y-4">
+                {/* CEG Stream row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">CEG Regular Count</label>
+                    <input
+                      type="number"
+                      name="cegRegular"
+                      value={formData.cegRegular}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">CEG Arrear Count</label>
+                    <input
+                      type="number"
+                      name="cegArrear"
+                      value={formData.cegArrear}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">CEG total</label>
+                    <input
+                      type="number"
+                      value={totalCEG}
+                      readOnly
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold rounded-lg text-sm outline-none"
+                      tabIndex={-1}
+                    />
+                  </div>
+                </div>
+
+                {/* MIT Stream row */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">MIT Regular Count</label>
+                    <input
+                      type="number"
+                      name="mitRegular"
+                      value={formData.mitRegular}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-500 mb-1.5">MIT Arrear Count</label>
+                    <input
+                      type="number"
+                      name="mitArrear"
+                      value={formData.mitArrear}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all"
+                      min="0"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1.5">MIT total</label>
+                    <input
+                      type="number"
+                      value={totalMIT}
+                      readOnly
+                      className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-600 font-semibold rounded-lg text-sm outline-none"
+                      tabIndex={-1}
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                MIT Arrear
-              </label>
-              <input
-                type="number"
-                name="mitArrear"
-                value={formData.mitArrear}
-                onChange={handleInputChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                min="0"
-                required
-              />
-            </div>
-            {/* Total MIT Students (Read-only) */}
-            <div className="col-span-2 flex flex-col sm:flex-row items-stretch gap-4">
-              <div className="w-full sm:w-1/2">
-                <label className="block text-xs font-medium text-gray-500 mb-1">Total MIT Students</label>
-                <input
-                  type="number"
-                  value={totalMIT}
-                  readOnly
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold shadow-sm"
-                  tabIndex={-1}
-                />
+
+            {/* Total Summaries Block */}
+            <div className="grid grid-cols-3 gap-4 bg-slate-900 text-white p-5 rounded-xl mt-4">
+              <div className="text-center border-r border-slate-800">
+                <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-400">Total Regular</span>
+                <span className="text-xl font-bold tracking-tight">{formData.totalRegular}</span>
+              </div>
+              <div className="text-center border-r border-slate-800">
+                <span className="block text-[10px] uppercase font-bold tracking-wider text-slate-400">Total Arrear</span>
+                <span className="text-xl font-bold tracking-tight">{formData.totalArrear}</span>
+              </div>
+              <div className="text-center">
+                <span className="block text-[10px] uppercase font-bold tracking-wider text-amber-400">Grand Total</span>
+                <span className="text-xl font-bold tracking-tight text-amber-400">{formData.total}</span>
               </div>
             </div>
           </div>
 
-          {/* Total Displays */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Regular
-              </label>
-              <input
-                type="number"
-                value={formData.totalRegular}
-                readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Arrear
-              </label>
-              <input
-                type="number"
-                value={formData.totalArrear}
-                readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Total Students
-              </label>
-              <input
-                type="number"
-                value={formData.total}
-                readOnly
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-semibold"
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end mt-6">
+          <div className="bg-slate-50 px-6 py-3.5 flex justify-end border-t border-slate-200">
             <button
               type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white text-sm font-medium rounded-lg shadow-sm transition-colors focus:ring-2 focus:ring-blue-500/20 outline-none"
             >
               {editingId ? 'Update' : 'Submit'}
             </button>
           </div>
         </m.form>
 
+        {/* Dynamic Data Table */}
         <m.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
+          transition={{ delay: 0.2, duration: 0.4 }}
         >
-        {/* Table to display entries */}
-        {entries.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Submitted Entries</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full">
-                <thead>
-                  <tr className="bg-gray-50">
-                    <th className="px-4 py-2 text-left">Specialization</th>
-                    <th className="px-4 py-2 text-left">Course Code</th>
-                    <th className="px-4 py-2 text-left">Course Name</th>
-                      <th className="px-4 py-2 text-center">Total CEG</th>
-                      <th className="px-4 py-2 text-center">Total MIT</th>
-                    <th className="px-4 py-2 text-center">Total</th>
-                      <th className="px-4 py-2 text-center">Actions</th>
-                      <th className="px-4 py-2 text-center">Upload Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {entries.map((entry) => (
-                    <tr key={entry._id}>
-                      <td className="px-4 py-2">{entry.specialization}</td>
-                      <td className="px-4 py-2">{entry.courseCode}</td>
-                      <td className="px-4 py-2">{entry.courseName}</td>
-                      <td className="px-4 py-2 text-center font-semibold">{entry.cegRegular + entry.cegArrear}</td>
-                      <td className="px-4 py-2 text-center font-semibold">{entry.mitRegular + entry.mitArrear}</td>
-                      <td className="px-4 py-2 text-center font-semibold">{entry.total}</td>
-                      <td className="px-4 py-2 text-center space-x-2">
-                        <button
-                          onClick={() => handleEditClick(entry)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleOpenUploadModal(entry)}
-                          className="text-green-600 hover:text-green-900"
-                        >
-                          Upload Students List
-                        </button>
-                      </td>
-                      <td className="px-4 py-2 text-center text-xs">
-                        {['cegRegular', 'cegArrear', 'mitRegular', 'mitArrear']
-                          .map(f => {
-                            const statusKey = f + 'Status';
-                            const status = entry[statusKey] || 'pending';
-                            const label = status === 'uploaded' ? '✓' : status === 'skipped' ? '–' : '○';
-                            return <span key={f} title={`${f}: ${status}`} className="mx-0.5">{label}</span>;
-                          })}
-                      </td>
+          {entries.length > 0 && (
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-6 py-4 border-b border-slate-200 bg-slate-50/70">
+                <h2 className="text-base font-semibold text-slate-900">Submitted Entries</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <th className="px-6 py-3">Specialization</th>
+                      <th className="px-6 py-3">Course Catalog</th>
+                      <th className="px-6 py-3 text-center">CEG</th>
+                      <th className="px-6 py-3 text-center">MIT</th>
+                      <th className="px-6 py-3 text-center">Total</th>
+                      <th className="px-6 py-3 text-center">Upload status</th>
+                      <th className="px-6 py-3 text-right">Actions</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 text-slate-700">
+                    {entries.map((entry) => (
+                      <tr key={entry._id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4 font-medium text-slate-900">{entry.specialization}</td>
+                        <td className="px-6 py-4">
+                          <div className="font-medium text-slate-800">{entry.courseCode}</div>
+                          <div className="text-xs text-slate-400">{entry.courseName}</div>
+                        </td>
+                        <td className="px-6 py-4 text-center font-mono font-medium">{entry.cegRegular + entry.cegArrear}</td>
+                        <td className="px-6 py-4 text-center font-mono font-medium">{entry.mitRegular + entry.mitArrear}</td>
+                        <td className="px-6 py-4 text-center font-mono font-bold text-blue-600">{entry.total}</td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-1.5">
+                            {['cegRegular', 'cegArrear', 'mitRegular', 'mitArrear'].map(f => {
+                              const status = entry[f + 'Status'] || 'pending';
+                              const styles = status === 'uploaded' 
+                                ? 'bg-green-100 text-green-700 border-green-200' 
+                                : status === 'skipped' 
+                                ? 'bg-slate-100 text-slate-400 border-slate-200' 
+                                : 'bg-amber-50 text-amber-600 border-amber-200';
+                              return (
+                                <span 
+                                  key={f} 
+                                  title={`${f}: ${status}`} 
+                                  className={`w-5 h-5 flex items-center justify-center rounded-md border text-[10px] font-bold ${styles}`}
+                                >
+                                  {status === 'uploaded' ? '✓' : status === 'skipped' ? '–' : '○'}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right space-x-3 whitespace-nowrap">
+                          <button
+                            onClick={() => handleEditClick(entry)}
+                            className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleOpenUploadModal(entry)}
+                            className="inline-flex items-center text-sm font-medium text-emerald-600 hover:text-emerald-800 transition-colors"
+                          >
+                            Upload Student Details
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </m.div>
       </div>
 
+      {/* Upload Matrix Dialog Modal */}
       {uploadModalEntry && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold">Upload Students List</h2>
-              <button onClick={() => setUploadModalEntry(null)} className="text-slate-400 hover:text-slate-700 text-xl">&times;</button>
-            </div>
-            <p className="text-sm text-slate-500">
-              {uploadModalEntry.courseCode} - {uploadModalEntry.courseName} ({uploadModalEntry.specialization})
-            </p>
-
-            {[
-              { key: 'cegRegularStatus', label: 'CEG Regular', count: uploadModalEntry.cegRegular },
-              { key: 'cegArrearStatus', label: 'CEG Arrear', count: uploadModalEntry.cegArrear },
-              { key: 'mitRegularStatus', label: 'MIT Regular', count: uploadModalEntry.mitRegular },
-              { key: 'mitArrearStatus', label: 'MIT Arrear', count: uploadModalEntry.mitArrear }
-            ].map(({ key, label, count }) => {
-              const status = localStatuses[key];
-              const isZero = count === 0;
-              const isUploaded = status === 'uploaded';
-              const isSkipped = status === 'skipped';
-              const isDone = isUploaded || isSkipped;
-              const isGreyed = isZero && !isDone;
-              return (
-                <div key={key} className={`border rounded-xl p-4 transition-colors ${
-                  isUploaded ? 'bg-green-50 border-green-200' :
-                  isSkipped ? 'bg-slate-100 border-slate-200 opacity-60' :
-                  isZero ? 'bg-slate-100 border-slate-200 opacity-50' :
-                  'bg-slate-50 border-slate-200'
-                }`}>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <span className="font-semibold text-sm">{label}</span>
-                      <span className="ml-2 text-xs text-slate-500">({count} students)</span>
-                      {isUploaded && <span className="ml-2 text-xs text-green-600 font-medium">✓ Uploaded</span>}
-                      {(isSkipped || (isDone && isZero)) && <span className="ml-2 text-xs text-slate-400 font-medium">– Skipped</span>}
-                    </div>
-                    {isZero && !isDone && (
-                      <button
-                        onClick={() => handleUploadOrSkip(key, 'skipped')}
-                        className="px-4 py-1.5 bg-slate-400 text-white text-sm rounded-lg hover:bg-slate-500"
-                      >
-                        Skip
-                      </button>
-                    )}
-                    {!isZero && !isDone && (
-                      <button
-                        onClick={() => document.getElementById(`file-${key}`).click()}
-                        className="px-4 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700"
-                        disabled={uploadingField === key}
-                      >
-                        {uploadingField === key ? 'Uploading...' : 'Upload Excel'}
-                      </button>
-                    )}
-                    {isUploaded && (
-                      <button
-                        onClick={() => document.getElementById(`file-${key}`).click()}
-                        className="px-4 py-1.5 bg-amber-500 text-white text-sm rounded-lg hover:bg-amber-600"
-                        disabled={uploadingField === key}
-                      >
-                        {uploadingField === key ? 'Uploading...' : 'Change Excel'}
-                      </button>
-                    )}
-                    <input
-                      id={`file-${key}`}
-                      type="file"
-                      accept=".xlsx,.xls"
-                      className="hidden"
-                      onChange={(e) => handleFileSelect(e, key)}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-
-            {allFieldsDone() && (
-              <button
-                onClick={() => { setUploadModalEntry(null); navigate(`/dashboard/seating-plan?entryId=${uploadModalEntry._id}`); }}
-                className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700"
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-xl overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Import Student Details</h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {uploadModalEntry.courseCode} — {uploadModalEntry.courseName} ({uploadModalEntry.specialization})
+                </p>
+              </div>
+              <button 
+                onClick={() => setUploadModalEntry(null)} 
+                className="text-slate-400 hover:text-slate-600 text-2xl transition-colors outline-none"
               >
-                Generate Seating Arrangement
+                &times;
               </button>
-            )}
+            </div>
+
+            <div className="p-6 space-y-3 max-h-[60vh] overflow-y-auto">
+              {[
+                { key: 'cegRegularStatus', label: 'CEG Regular ', count: uploadModalEntry.cegRegular },
+                { key: 'cegArrearStatus', label: 'CEG Arrear ', count: uploadModalEntry.cegArrear },
+                { key: 'mitRegularStatus', label: 'MIT Regular ', count: uploadModalEntry.mitRegular },
+                { key: 'mitArrearStatus', label: 'MIT Arrear ', count: uploadModalEntry.mitArrear }
+              ].map(({ key, label, count }) => {
+                const status = localStatuses[key];
+                const isZero = count === 0;
+                const isUploaded = status === 'uploaded';
+                const isSkipped = status === 'skipped';
+                const isDone = isUploaded || isSkipped;
+
+                return (
+                  <div key={key} className={`border rounded-lg p-4 flex items-center justify-between transition-all ${
+                    isUploaded ? 'bg-green-50/50 border-green-200' :
+                    isSkipped ? 'bg-slate-50 border-slate-200 opacity-60' :
+                    isZero ? 'bg-slate-50/60 border-slate-200/60 opacity-50' :
+                    'bg-white border-slate-200 shadow-xs'
+                  }`}>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm text-slate-800">{label}</span>
+                        <span className="text-xs text-slate-400 font-mono">({count} Headcount)</span>
+                      </div>
+                      <div className="mt-1">
+                        {isUploaded && <span className="text-[11px] text-green-600 font-medium inline-flex items-center gap-1">✓ Storage verification verified</span>}
+                        {(isSkipped || (isDone && isZero)) && <span className="text-[11px] text-slate-400 font-medium">Excluded from execution pipeline</span>}
+                        {!isDone && !isZero && <span className="text-[11px] text-amber-500 font-medium"></span>}
+                      </div>
+                    </div>
+
+                    <div>
+                      {isZero && !isDone && (
+                        <button
+                          onClick={() => handleUploadOrSkip(key, 'skipped')}
+                          className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-semibold rounded-md transition-colors"
+                        >
+                          Skip Field
+                        </button>
+                      )}
+                      {!isZero && !isDone && (
+                        <button
+                          onClick={() => document.getElementById(`file-${key}`).click()}
+                          className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md shadow-xs transition-colors"
+                          disabled={uploadingField === key}
+                        >
+                          {uploadingField === key ? 'Uploading...' : 'Attach Sheet'}
+                        </button>
+                      )}
+                      {isUploaded && (
+                        <button
+                          onClick={() => document.getElementById(`file-${key}`).click()}
+                          className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold rounded-md shadow-xs transition-colors"
+                          disabled={uploadingField === key}
+                        >
+                          {uploadingField === key ? 'Processing...' : 'Overwrite'}
+                        </button>
+                      )}
+                      <input
+                        id={`file-${key}`}
+                        type="file"
+                        accept=".xlsx,.xls"
+                        className="hidden"
+                        onChange={(e) => handleFileSelect(e, key)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="p-4 bg-slate-50 border-t border-slate-200">
+              {allFieldsDone() ? (
+                <button
+                  onClick={() => { setUploadModalEntry(null); navigate(`/dashboard/seating-plan?entryId=${uploadModalEntry._id}`); }}
+                  className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-sm font-semibold rounded-lg shadow-md transition-colors"
+                >
+                  Generate Seating Layout
+                </button>
+              ) : (
+                <p className="text-center text-xs text-slate-400 py-1 font-medium">
+                  Provide assets for all structural fields to unlock execution layout pipelines.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -636,4 +635,4 @@ const StudentInput = () => {
   );
 };
 
-export default StudentInput; 
+export default StudentInput;
