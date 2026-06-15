@@ -4,7 +4,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test tests/timetableParser.test.js tests/sessionHelpers.test.js",
     "dev": "nodemon server.js",
     "lint": "eslint . --ext .js",
     "format": "prettier --write \"**/*.js\"",
