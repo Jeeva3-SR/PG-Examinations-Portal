@@ -32,7 +32,7 @@
   import Letters from './pages/hod/FinalReports';
   import SignOff from './pages/hod/SignOff';
   import FacultyLayout from './components/layouts/Faculty';
-  import HODLayout from './components/layouts/hod';
+  import HODLayout from './components/layouts/HOD';
   import HODDashboard from './pages/hod/HODDashboard';
 
   import SettlementAllPages from './pages/settlement/SettlementAllPages';
