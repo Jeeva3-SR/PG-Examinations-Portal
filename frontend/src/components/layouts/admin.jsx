@@ -5,79 +5,26 @@ import {
   Menu, 
   X, 
   LayoutDashboard, 
-  BookOpen, 
-  FileText, 
   Users, 
-  Target, 
-  DollarSign, 
-  UserSquare2, 
-  GraduationCap, 
-  Library,
-  Calendar,
-  ClipboardList,
-  UserPlus,
-  Home,
-  Briefcase,
-  Settings,
-  Key,
-  LogOut,
+  ShieldCheck,
+  LogOut, 
   User
 } from 'lucide-react';
 
-// 1. Core Base Faculty Navigation Paths
-const facultyLinks = [
-  { label: "Dashboard", path: "/faculty", icon: LayoutDashboard },
-  { label: "Assigned Courses", path: "/faculty/assigned-courses", icon: BookOpen },
-  { label: "Question Paper Orders", path: "/faculty/qp-orders", icon: FileText },
-  { label: "Invigilation Duties", path: "/faculty/invigilation-duty", icon: Users },
-  { label: "Evaluator Tasks", path: "/faculty/evaluator-details", icon: Target },
-  { label: "Financial Claims", path: "/faculty/release-claim", icon: DollarSign },
-  { label: "Maintain Profile", path: "/faculty/update-profile", icon: UserSquare2 },
-  { label: "All Faculties", path: "/faculty/all-faculties", icon: GraduationCap },
-  { label: "All Subjects", path: "/faculty/all-subjects", icon: Library },
+// Admin Sidebar Navigation Links
+const adminLinks = [
+  { label: "Admin Dashboard", path: "/admin", icon: LayoutDashboard },
+  { label: "User Management", path: "/admin/users", icon: Users },
+  { label: "User Assignments", path: "/admin/assignments", icon: ShieldCheck },
 ];
 
-// 2. Dynamic Coordinator Workspace Links (Cleaned from Back Action duplicate items)
-const coordinatorLinks = [
-  { label: "Coord. Dashboard", path: "/faculty/coordinator/dashboard", icon: Home },
-  { label: "Student Input", path: "/faculty/coordinator/student-input", icon: Users },
-  { label: "Session Views", path: "/faculty/coordinator/sessions", icon: Calendar },
-  { label: "Assign QP Setter", path: "/faculty/coordinator/assign-qpsetter", icon: UserPlus },
-  { label: "Subject Assignments", path: "/faculty/coordinator/subject-assignments", icon: BookOpen },
-  { label: "Room Management", path: "/faculty/coordinator/rooms", icon: Briefcase },
-  { label: "Seating Arrangement", path: "/faculty/coordinator/seating-arrangement", icon: ClipboardList },
-  { label: "Duty Assignments", path: "/faculty/coordinator/duties", icon: Users },
-  { label: "Expense Claims", path: "/faculty/coordinator/claims", icon: DollarSign },
-  { label: "Answer Sheets", path: "/faculty/coordinator/letters", icon: FileText },
-  { label: "User Management", path: "/faculty/coordinator/users", icon: Settings },
-  { label: "Reset Password", path: "/faculty/coordinator/reset-password", icon: Key },
-];
-
-// 3. Dynamic HOD Workspace Links (Cleaned from Back Action duplicate items)
-const hodLinks = [
-  { label: "HOD Dashboard", path: "/faculty/hod/dashboard", icon: Home },
-  { label: "Consolidated Sessions", path: "/faculty/hod/consolidated-sessions", icon: BookOpen },
-  { label: "Approve QP Orders", path: "/faculty/hod/approve-qporders", icon: FileText },
-  { label: "Final Reports", path: "/faculty/hod/letters", icon: FileText },
-  { label: "Sign Off", path: "/faculty/hod/signoff", icon: Target },
-  { label: "Reset Password", path: "/faculty/hod/reset-password", icon: Key },
-];
-
-const FacultyLayout = () => {
+const AdminLayout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const logout = useAuthStore((s) => s.logout);
   const user = useAuthStore((s) => s.user);
   
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-
-  let activeNavigationSet = facultyLinks;
-
-  if (location.pathname.includes('/coordinator')) {
-    activeNavigationSet = coordinatorLinks;
-  } else if (location.pathname.includes('/hod')) {
-    activeNavigationSet = hodLinks;
-  }
 
   const handleSignOut = () => {
     logout();
@@ -87,6 +34,7 @@ const FacultyLayout = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 font-sans">
       
+      {/* Mobile Sidebar Overlay */}
       {!isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/40 z-40 lg:hidden transition-opacity duration-300"
@@ -107,7 +55,7 @@ const FacultyLayout = () => {
             <div className="p-6 border-b border-white/10 bg-black/10 flex items-center justify-between">
               <div>
                 <h1 className="text-sm font-black tracking-widest text-white uppercase">PG Examinations</h1>
-                <p className="text-[10px] text-indigo-300 font-bold tracking-wider uppercase mt-0.5">PG EXAMINATIONS PORTAL</p>
+                <p className="text-[10px] text-indigo-300 font-bold tracking-wider uppercase mt-0.5">Admin Control Panel</p>
               </div>
               <button className="lg:hidden p-1 rounded-lg text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
                 <X className="w-5 h-5" />
@@ -115,7 +63,7 @@ const FacultyLayout = () => {
             </div>
 
             <nav className="p-4 space-y-1 overflow-y-auto max-h-[calc(100vh-160px)] scrollbar-thin">
-              {activeNavigationSet.map((item) => {
+              {adminLinks.map((item) => {
                 const matchesActive = location.pathname === item.path;
                 const IconComponent = item.icon;
                 
@@ -159,9 +107,6 @@ const FacultyLayout = () => {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <div className="flex items-center space-x-3">
-
-            </div>
           </div>
 
           <div className="flex items-center space-x-3 bg-slate-50 border border-slate-100 pl-3 pr-4 py-1.5 rounded-xl shadow-sm max-w-[240px]">
@@ -169,8 +114,8 @@ const FacultyLayout = () => {
               <User className="w-4 h-4" />
             </div>
             <div className="text-left min-w-0">
-              <p className="text-xs font-black text-slate-800 truncate leading-tight">{user?.name || 'Academic Member'}</p>
-              <p className="text-[10px] text-slate-400 font-bold truncate tracking-wide">ID: {user?.facultyId || 'N/A'}</p>
+              <p className="text-xs font-black text-slate-800 truncate leading-tight">{user?.name || 'System Admin'}</p>
+              <p className="text-[10px] text-slate-400 font-bold truncate tracking-wide">ID: {user?.facultyId || 'ADMIN'}</p>
             </div>
           </div>
         </header>
@@ -185,4 +130,4 @@ const FacultyLayout = () => {
   );
 };
 
-export default FacultyLayout;
+export default AdminLayout;

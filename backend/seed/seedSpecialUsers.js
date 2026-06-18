@@ -4,19 +4,13 @@ const User = require('../models/User'); // Kept model instance
 const MONGODB_URI = 'mongodb://127.0.0.1:27017/exam-management';
 
 const users = [
-  {
-    userId: 'COORD001',
-    name: 'PG Coordinator',
-    email: 'coordinator@annauniv.edu',
-    password: 'coordinator@pg', // Plain text string configuration
-    role: 'coordinator'
-  },
+  
   {
     userId: 'HOD001',
     name: 'CSE HOD',
     email: 'csehod@annauniv.edu',
     password: 'csehod@pg', // Plain text string configuration
-    role: 'hod'
+    role: 'admin'
   }
 ];
 

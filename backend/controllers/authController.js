@@ -37,6 +37,12 @@ exports.login = asyncHandler(async (req, res) => {
   if (!user || !passwordMatches) throw new AppError('Invalid credentials', 401);
   if (user.isActive === false) throw new AppError('Your account has been deactivated.', 403);
 
+  // Strict Role Enforcement: Explicitly permit only faculty and admin tiers
+  const allowedRoles = ['faculty', 'admin'];
+  if (!allowedRoles.includes(user.role)) {
+    throw new AppError('Unauthorized role platform assignment.', 403);
+  }
+
   const token = jwt.sign({ userId: user._id }, getJwtSecret(), { expiresIn: '1h' });
 
   res.json({ token, user: formatUserResponse(user) });
@@ -52,6 +58,7 @@ exports.register = asyncHandler(async (req, res) => {
   const existingUser = await User.findOne({ $or: [{ userId }, { email: normalizedEmail }] });
   if (existingUser) throw new AppError('User with this email already exists.', 400);
 
+  // Registration profile remains strictly locked into the 'faculty' paradigm
   const user = new User({
     userId, name, email: normalizedEmail, password, role: 'faculty', isActive: true,
     department: req.body.department, employeeId: req.body.employeeId,
@@ -87,7 +94,8 @@ exports.updateProfile = asyncHandler(async (req, res) => {
 });
 
 exports.getAllUsers = asyncHandler(async (req, res) => {
-  const users = await User.find({}, '-password');
+  // Filters list to display only faculty and admin fields for data safety
+  const users = await User.find({ role: { $in: ['faculty', 'admin'] } }, '-password');
   res.json(users);
 });
 

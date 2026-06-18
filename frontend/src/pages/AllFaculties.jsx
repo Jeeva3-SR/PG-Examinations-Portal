@@ -5,7 +5,7 @@ const AllFaculties = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+ useEffect(() => {
   const fetchFaculties = async () => {
     try {
       const res = await api.get('/api/faculty');

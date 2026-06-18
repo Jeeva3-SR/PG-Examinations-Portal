@@ -26,8 +26,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    // 🛡️ Added 'admin' to prevent setup-admin validation crashes
-    enum: ['faculty', 'coordinator', 'hod', 'admin'], 
+    enum: ['faculty','admin'], 
     required: true
   },
   isActive: {

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../lib/api';
-import  useAuthStore  from '../store/useAuthStore';
-
+import useAuthStore from '../store/useAuthStore';
 
 const UnifiedLogin = () => {
   const navigate = useNavigate();
 
-  // State Management
-  const [role, setRole] = useState('faculty'); // Defaults to faculty workflow
+  // State Management - Strictly restricted to 'faculty' or 'admin'
+  const [role, setRole] = useState('faculty'); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,7 +34,7 @@ const UnifiedLogin = () => {
     }
 
     try {
-      // Send authentic login payload across ALL roles to your production route
+      // Send login payload to your production route
       const res = await api.post('/api/login', { 
         email: email.trim(), 
         password: password 
@@ -52,21 +51,17 @@ const UnifiedLogin = () => {
 
       const userRole = backendUser?.role;
 
+      // Faculty Workflow
       if (role === 'faculty' && userRole === 'faculty') {
         login(backendUser, token, 'Faculty');
         navigate('/faculty');
         return;
       } 
       
-      if (role === 'coordinator' && userRole === 'coordinator') {
-        login(backendUser, token, 'Coordinator');
-        navigate('/dashboard');
-        return;
-      } 
-      
-      if (role === 'hod' && userRole === 'hod') {
-        login(backendUser, token, 'HOD');
-        navigate('/hod/dashboard');
+      // Admin Workflow
+      if (role === 'admin' && userRole === 'admin') {
+        login(backendUser, token, 'Admin');
+        navigate('/admin/dashboard');
         return;
       }
 
@@ -74,7 +69,6 @@ const UnifiedLogin = () => {
 
     } catch (apiError) {
       console.error('API Authentication failure:', apiError);
-      // Strictly output the backend response error message or a generic fallback
       setError(apiError.response?.data?.error || 'Authentication failed. Please check your credentials.');
     } finally {
       setLoading(false);
@@ -126,7 +120,7 @@ const UnifiedLogin = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Dynamic Dropdown Field */}
+            {/* Dropdown Field - Only Faculty & Admin */}
             <div>
               <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 mb-2">
                 Operational Role
@@ -138,8 +132,7 @@ const UnifiedLogin = () => {
                   className="w-full appearance-none bg-slate-50/50 border border-slate-200 focus:border-indigo-500 focus:bg-white rounded-xl py-3 px-4 text-slate-800 font-medium shadow-sm transition-all duration-200 outline-none focus:ring-2 focus:ring-indigo-100"
                 >
                   <option value="faculty">Faculty</option>
-                  <option value="coordinator">Coordinator</option>
-                  <option value="hod">Head of Department (HOD)</option>
+                  <option value="admin">Administrator</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +207,7 @@ const UnifiedLogin = () => {
                   <span>Verifying Credentials...</span>
                 </span>
               ) : (
-                `Sign In as ${role.charAt(0).toUpperCase() + role.slice(1)}`
+                `Sign In as ${role === 'faculty' ? 'Faculty' : 'Admin'}`
               )}
             </button>
           </form>

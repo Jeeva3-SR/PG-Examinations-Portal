@@ -24,19 +24,13 @@ async function executeSeeding() {
     // 1. Seed Users (HOD, Coordinator, and Faculty accounts)
     console.log('👤 Seeding user credentials...');
     await User.insertMany([
+    
       { 
-        userId: 'HOD01', 
-        name: 'Dr. Ramesh (HOD)', 
-        email: 'csehod@annauniv.edu',
-        password: await bcrypt.hash('csehod@pg', 10), 
-        role: 'hod' 
-      },
-      { 
-        userId: 'COORD01', 
-        name: 'Dr. C. Valliyammai', 
-        email: 'coordinator@annauniv.edu',
-        password: await bcrypt.hash('coordinator@pg', 10), 
-        role: 'coordinator' 
+        userId: 'ADMIN001', 
+        name: 'Jeeva', 
+        email: 'admin@annauniv.edu',
+        password: 'password123', 
+        role: 'admin' 
       },
       { 
         userId: 'FAC001', 

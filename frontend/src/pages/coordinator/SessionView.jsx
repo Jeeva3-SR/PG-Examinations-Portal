@@ -332,6 +332,7 @@ const SessionView = () => {
     } catch {
       // proceed with basic confirmation if impact check fails
     }
+    
 
     let confirmMessage = `Delete session for ${session.courseCode} on ${toDateInputValue(session.date)} (${session.session})?`;
     confirmMessage += buildImpactMessage(impact, 'deletion') || '\n\nAssigned invigilators, QP setters, and faculty will be notified.';
