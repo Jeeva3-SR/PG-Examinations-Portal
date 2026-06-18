@@ -6,10 +6,10 @@ const MONGODB_URI = 'mongodb://127.0.0.1:27017/exam-management';
 const users = [
   
   {
-    userId: 'HOD001',
-    name: 'CSE HOD',
-    email: 'csehod@annauniv.edu',
-    password: 'csehod@pg', // Plain text string configuration
+    userId: 'ADMIN001',
+    name: 'Admin',
+    email: 'admin@annauniv.edu',
+    password: 'admin@pg',
     role: 'admin'
   }
 ];
