@@ -21,15 +21,23 @@ const UserManagement = () => {
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      const response = await api.get('/api/users');
-      setUsers(response.data);
-    } catch (error) {
-      const msg = error.response?.data?.error || error.message || 'Error fetching users';
-      setError(msg);
-    }
-  };
+ const fetchUsers = async () => {
+  try {
+    const response = await api.get('/api/users');
+
+    const filteredUsers = response.data.filter(
+      user => user.role !== 'admin'
+    );
+
+    setUsers(filteredUsers);
+  } catch (error) {
+    const msg =
+      error.response?.data?.error ||
+      error.message ||
+      'Error fetching users';
+    setError(msg);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -227,7 +235,7 @@ const UserManagement = () => {
                 <tr key={user._id} className="hover:bg-slate-50/40 transition-colors">
                   <td className="px-6 py-4">
                     <div className="font-bold text-slate-800 text-sm">{user.name}</div>
-                    <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide mt-0.5">{user.department || 'Academic Division'}</div>
+                    <div className="text-[10px] font-bold text-indigo-500 uppercase tracking-wide mt-0.5">{user.department || 'CSE'}</div>
                   </td>
                   <td className="px-6 py-4 font-semibold text-slate-500 font-mono">
                     {user.email}

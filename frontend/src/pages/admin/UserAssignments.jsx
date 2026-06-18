@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { UserCheck, ShieldX, AlertTriangle, Filter, Search } from 'lucide-react';
+import { UserCheck, ShieldX, AlertTriangle, Filter, Search, AlertCircle, X } from 'lucide-react';
 
 const UserAssignments = () => {
   const [faculties, setFaculties] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Role Filter State Configuration - Initialized as all unchecked (false)
-  const [selectedRoles, setSelectedRoles] = useState({
-    faculty: false,
-    coordinator: false,
-    hod: false
-  });
+  // Changed from multiple checkboxes to a single string value for mutually exclusive selection
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState('all');
   
+  // Toast notification state
+  const [toast, setToast] = useState({ isOpen: false, message: '' });
+
   // Modal state structure
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -25,6 +24,16 @@ const UserAssignments = () => {
   useEffect(() => {
     fetchFaculties();
   }, []);
+
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (toast.isOpen) {
+      const timer = setTimeout(() => {
+        setToast({ isOpen: false, message: '' });
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast.isOpen]);
 
   const fetchFaculties = () => {
     fetch('/api/faculty')
@@ -40,15 +49,25 @@ const UserAssignments = () => {
       });
   };
 
-  const handleFilterChange = (role) => {
-    setSelectedRoles(prev => ({
-      ...prev,
-      [role]: !prev[role]
-    }));
+  const showWarning = (message) => {
+    setToast({ isOpen: true, message });
   };
 
   const initiateToggleRole = (faculty, roleToToggle, currentRoles) => {
     const hasRole = currentRoles.includes(roleToToggle);
+    
+    // Guard Clause: Prevent a single faculty from occupying both HOD and Coordinator positions
+    if (!hasRole) {
+      if (roleToToggle === 'hod' && currentRoles.includes('coordinator')) {
+        showWarning(`Operation Denied: ${faculty.name} is already a Coordinator. A user cannot be both an HOD and a Coordinator.`);
+        return;
+      }
+      if (roleToToggle === 'coordinator' && currentRoles.includes('hod')) {
+        showWarning(`Operation Denied: ${faculty.name} is already an HOD. A user cannot be both an HOD and a Coordinator.`);
+        return;
+      }
+    }
+
     setConfirmModal({
       isOpen: true,
       facultyId: faculty._id,
@@ -90,25 +109,19 @@ const UserAssignments = () => {
     }
   };
 
-  // Filter and Search computation layer (Strict Exact Role Matching)
+  // Filter and Search computation layer (Refactored for Exclusive Radio Selection)
   const filteredFaculties = faculties.filter((faculty) => {
     const assignedRoles = faculty.roles || ['faculty'];
-    const isAnyFilterActive = selectedRoles.faculty || selectedRoles.coordinator || selectedRoles.hod;
     
     let matchesRole = true;
-    if (isAnyFilterActive) {
-      const checkedFilters = [];
-      if (selectedRoles.faculty) checkedFilters.push('faculty');
-      if (selectedRoles.coordinator) checkedFilters.push('coordinator');
-      if (selectedRoles.hod) checkedFilters.push('hod');
-
-      // Strict check: if ONLY 'faculty' checkbox is chosen, exclude anyone with superior privileges
-      if (selectedRoles.faculty && !selectedRoles.coordinator && !selectedRoles.hod) {
+    if (selectedRoleFilter !== 'all') {
+      if (selectedRoleFilter === 'faculty') {
+        // Strict check: baseline faculty shouldn't possess elevated access credentials
         matchesRole = assignedRoles.includes('faculty') && 
                       !assignedRoles.includes('coordinator') && 
                       !assignedRoles.includes('hod');
       } else {
-        matchesRole = checkedFilters.some(role => assignedRoles.includes(role));
+        matchesRole = assignedRoles.includes(selectedRoleFilter);
       }
     }
 
@@ -128,6 +141,26 @@ const UserAssignments = () => {
 
   return (
     <div className="space-y-8 relative">
+      
+      {/* Toast Notification Element */}
+      {toast.isOpen && (
+        <div className="fixed top-5 right-5 z-50 max-w-md w-full bg-slate-950 text-white p-4 rounded-xl shadow-2xl border border-slate-800 flex items-start space-x-3 animate-slideIn">
+          <div className="p-1 rounded-lg bg-amber-500/10 text-amber-500 shrink-0">
+            <AlertCircle className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h5 className="text-xs font-black uppercase tracking-wider text-amber-500">Conflict </h5>
+            <p className="text-[11px] font-medium text-slate-300 mt-0.5 leading-relaxed">{toast.message}</p>
+          </div>
+          <button 
+            onClick={() => setToast({ isOpen: false, message: '' })}
+            className="text-slate-500 hover:text-slate-300 transition-colors shrink-0"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
         <div className="p-6 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -149,6 +182,7 @@ const UserAssignments = () => {
           </div>
         </div>
 
+        {/* Radio Button Filtering Section */}
         <div className="bg-slate-50/50 border-b border-slate-100 px-6 py-4 flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-6">
           <div className="flex items-center space-x-2 text-slate-500 shrink-0">
             <Filter className="w-3.5 h-3.5 text-slate-400" />
@@ -156,16 +190,18 @@ const UserAssignments = () => {
           </div>
           
           <div className="flex flex-wrap gap-5 items-center">
-            {['faculty', 'coordinator', 'hod'].map((role) => (
+            {['all', 'faculty', 'coordinator', 'hod'].map((role) => (
               <label key={role} className="inline-flex items-center space-x-2 cursor-pointer select-none group">
                 <input
-                  type="checkbox"
-                  checked={selectedRoles[role]}
-                  onChange={() => handleFilterChange(role)}
-                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/30 focus:ring-offset-0 transition-all cursor-pointer"
+                  type="radio"
+                  name="roleFilter"
+                  value={role}
+                  checked={selectedRoleFilter === role}
+                  onChange={() => setSelectedRoleFilter(role)}
+                  className="w-4 h-4 border-slate-300 text-indigo-600 focus:ring-indigo-500/30 transition-all cursor-pointer"
                 />
                 <span className="text-xs font-bold text-slate-600 uppercase tracking-wide group-hover:text-slate-900 transition-colors">
-                  {role === 'hod' ? 'HOD' : role}
+                  {role === 'all' ? 'All Users' : role === 'hod' ? 'HOD' : role}
                 </span>
               </label>
             ))}
@@ -195,7 +231,7 @@ const UserAssignments = () => {
                       <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mt-0.5">ID: {faculty.facultyId}</div>
                     </td>
                     <td className="px-6 py-4 font-semibold text-slate-500 uppercase tracking-wide">
-                      {faculty.department || 'General Academic'}
+                      {faculty.department || 'CSE'}
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1.5">
@@ -223,9 +259,9 @@ const UserAssignments = () => {
                         }`}
                       >
                         {isCoordinator ? (
-                          <><ShieldX className="w-3.5 h-3.5" /><span>Remove Coordinator</span></>
+                          <><ShieldX className="w-3.5 h-3.5" /><span>Revoke Coordinator Role</span></>
                         ) : (
-                          <><UserCheck className="w-3.5 h-3.5" /><span>Make Coordinator</span></>
+                          <><UserCheck className="w-3.5 h-3.5" /><span>Assign Coordinator Role</span></>
                         )}
                       </button>
 
@@ -238,9 +274,9 @@ const UserAssignments = () => {
                         }`}
                       >
                         {isHOD ? (
-                          <><ShieldX className="w-3.5 h-3.5" /><span>Remove HOD</span></>
+                          <><ShieldX className="w-3.5 h-3.5" /><span>Revoke HOD Role</span></>
                         ) : (
-                          <><UserCheck className="w-3.5 h-3.5" /><span>Make HOD</span></>
+                          <><UserCheck className="w-3.5 h-3.5" /><span>Assign HOD Role</span></>
                         )}
                       </button>
                     </td>
@@ -261,7 +297,7 @@ const UserAssignments = () => {
 
       {/* Confirmation Modal Container */}
       {confirmModal.isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-900/40 transition-all animate-fadeIn">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-slate-900/40 transition-all">
           <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all scale-100">
             <div className="flex items-start space-x-4">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border ${

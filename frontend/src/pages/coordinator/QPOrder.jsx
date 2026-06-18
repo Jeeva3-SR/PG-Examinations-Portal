@@ -61,17 +61,6 @@ const QPOrder = () => {
     }
   };
 
-  const handleStatusChange = async (orderId, newStatus) => {
-    try {
-      await api.patch(`/api/qporders/${orderId}/status`, {
-        status: newStatus,
-      });
-      fetchOrders();
-    } catch (error) {
-      console.error('Error updating order status:', error);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -99,9 +88,6 @@ const QPOrder = () => {
                   Quantity
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -121,17 +107,6 @@ const QPOrder = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {order.quantity}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <select
-                      value={order.status}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                      className="text-sm text-gray-900 border-0 focus:ring-0"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Ordered">Ordered</option>
-                      <option value="Received">Received</option>
-                    </select>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <button
                       onClick={() => generatePDF(order)}
@@ -150,4 +125,4 @@ const QPOrder = () => {
   );
 };
 
-export default QPOrder; 
+export default QPOrder;

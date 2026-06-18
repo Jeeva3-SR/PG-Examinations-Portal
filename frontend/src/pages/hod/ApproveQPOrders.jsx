@@ -3,19 +3,7 @@ import api from '../../lib/api';
 import { m, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { 
-  CheckCircle2, 
-  Clock, 
-  BookOpen, 
-  User, 
-  AlertCircle, 
-  XCircle, 
-  Eye, 
-  Check, 
-  X,
-  FolderOpen,
-  FileText
-} from 'lucide-react';
+import { BookOpen, User, Eye, X, FileText, AlertCircle, FolderOpen } from 'lucide-react';
 
 const generatePdfBlobUrl = (order) => {
   const doc = new jsPDF();
@@ -68,7 +56,7 @@ const generatePdfBlobUrl = (order) => {
     theme: 'grid',
     styles: { lineColor: [0,0,0], lineWidth: 0.1, fontSize: 10, cellPadding: 2, font: 'times' },
     head: [['DEGREE', 'BRANCH', 'DURATION', 'MAX. MARKS', 'REGULATION']],
-    body: [['M.E.', specialization, '3 Hrs.', '100', regulation]],
+    body: [['M.E.','CSE', '3 Hrs.', '100', regulation]],
     headStyles: { fillColor: [230,230,230], textColor: [0,0,0], fontStyle: 'bold', halign: 'center' },
     bodyStyles: { halign: 'center' },
   });
@@ -99,60 +87,11 @@ const generatePdfBlobUrl = (order) => {
   doc.text(bodyText2, 14, finalY + 12, { maxWidth: 180 });
   doc.text(bodyText3, 14, finalY + 38, { maxWidth: 180 });
 
-  // ========================================================
-  // COMPACT GOVERNMENT STYLE DIGITAL VERIFICATION BOX (FIXED)
-  // ========================================================
-  const boxWidth = 54;
-  const boxHeight = 15;
-  const boxX = 14;
-  const boxY = finalY + 55;
-
-  if (order.status === 'Approved') {
-    doc.setDrawColor(16, 185, 129); // Emerald Green
-    doc.setFillColor(240, 253, 250); // Light Mint background
-    doc.setLineWidth(0.2);
-    doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 1, 1, 'FD');
-
-    // FIXED: Draw Checkmark using vector path lines to prevent character corruption
-    doc.setDrawColor(5, 150, 105);
-    doc.setLineWidth(0.6);
-    doc.line(boxX + 3, boxY + 7.5, boxX + 4.5, boxY + 9.5); // Short downward stroke
-    doc.line(boxX + 4.5, boxY + 9.5, boxX + 7.5, boxY + 5.5); // Long upward stroke
-
-    // Metadata Text
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(30, 41, 59);
-    doc.text('Digitally Approved & Verified by', boxX + 10, boxY + 6);
-    doc.setFont('times', 'bold');
-    doc.text('Head of the Department, CSE', boxX + 10, boxY + 10);
-  } else {
-    doc.setDrawColor(217, 119, 6); // Amber Gold
-    doc.setFillColor(255, 251, 235); // Amber tint background
-    doc.setLineWidth(0.2);
-    doc.roundedRect(boxX, boxY, boxWidth, boxHeight, 1, 1, 'FD');
-
-    // Question Mark (Safe standard character)
-    doc.setFont('times', 'bold');
-    doc.setFontSize(11);
-    doc.setTextColor(217, 119, 6);
-    doc.text('?', boxX + 4, boxY + 8.5);
-
-    // Metadata Text
-    doc.setFont('times', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(30, 41, 59);
-    doc.text('Pending Verification:', boxX + 10, boxY + 6);
-    doc.setFont('times', 'italic');
-    doc.setTextColor(100, 116, 139);
-    doc.text('Awaiting HOD Digital Clearance', boxX + 10, boxY + 10);
-  }
-
-  // Reset baseline styling colors
+  // Baseline styling layout closure updates
   doc.setTextColor(0, 0, 0);
   doc.setFont('times', 'bold');
   doc.setFontSize(11);
-  doc.text('Head of the department', 185, finalY + 70, { align: 'right' });
+  doc.text('Head of the department', 185, finalY + 65, { align: 'right' });
 
   return doc.output('bloburl');
 };
@@ -160,14 +99,11 @@ const generatePdfBlobUrl = (order) => {
 const ApproveQPOrders = () => {
   const [orders, setOrders] = useState([]);
   const [assignedQPSetters, setAssignedQPSetters] = useState([]);
-  const [selectedOrders, setSelectedOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [toast, setToast] = useState('');
 
   // Control States for the Advanced PDF Viewer Modal Popup
   const [previewPdfUrl, setPreviewPdfUrl] = useState(null);
-  const [activeOrder, setActiveOrder] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -192,26 +128,9 @@ const ApproveQPOrders = () => {
     fetchData();
   }, []);
 
-  const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(''), 3500); };
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedOrders(orders.map(order => order._id));
-    } else {
-      setSelectedOrders([]);
-    }
-  };
-
-  const handleSelectOrder = (orderId) => {
-    setSelectedOrders(prev =>
-      prev.includes(orderId) ? prev.filter(id => id !== orderId) : [...prev, orderId]
-    );
-  };
-
   const handleOpenViewer = (order) => {
     const url = generatePdfBlobUrl(order);
     setPreviewPdfUrl(url);
-    setActiveOrder(order);
   };
 
   const handleCloseViewer = () => {
@@ -219,49 +138,6 @@ const ApproveQPOrders = () => {
       URL.revokeObjectURL(previewPdfUrl);
     }
     setPreviewPdfUrl(null);
-    setActiveOrder(null);
-  };
-
-  const handleUpdateStatus = async (orderId, targetStatus) => {
-    try {
-      const response = await api.patch(`/api/qporders/${orderId}/status`, {
-        status: targetStatus
-      });
-      
-      const updatedData = response.data;
-      setOrders(prev => prev.map(order => (order._id === orderId ? updatedData : order)));
-      
-      // Fluid update layout adjustments if looking at an active frame modal
-      if (activeOrder && activeOrder._id === orderId) {
-        const nextUrl = generatePdfBlobUrl(updatedData);
-        if (previewPdfUrl) URL.revokeObjectURL(previewPdfUrl);
-        setPreviewPdfUrl(nextUrl);
-        setActiveOrder(updatedData);
-      }
-      
-      showToast(`✅ Order status updated to ${targetStatus}`);
-    } catch (err) {
-      console.error(err);
-      showToast('❌ Failed to update status parameters');
-    }
-  };
-
-  const handleBulkAction = async (targetStatus) => {
-    if (selectedOrders.length === 0) return;
-    try {
-      await api.post('/api/qporders/bulk-status', {
-        orderIds: selectedOrders,
-        status: targetStatus
-      });
-      setOrders(prev =>
-        prev.map(order => selectedOrders.includes(order._id) ? { ...order, status: targetStatus } : order)
-      );
-      setSelectedOrders([]);
-      showToast(`⚡ Batch process set to ${targetStatus}`);
-    } catch (err) {
-      console.error(err);
-      showToast('❌ Bulk operation failed');
-    }
   };
 
   if (loading) {
@@ -283,46 +159,12 @@ const ApproveQPOrders = () => {
   return (
     <div className="max-w-6xl mx-auto space-y-6 text-left relative">
       
-      {/* Toast Notification Bar */}
-      <AnimatePresence>
-        {toast && (
-          <m.div 
-            initial={{ opacity: 0, y: -20, x: '-50%' }} 
-            animate={{ opacity: 1, y: 0, x: '-50%' }} 
-            exit={{ opacity: 0, y: -20, x: '-50%' }}
-            className="fixed top-4 left-1/2 z-50 bg-slate-900 border border-slate-800 text-slate-100 px-5 py-3 rounded-xl shadow-2xl text-sm font-semibold tracking-wide"
-          >
-            {toast}
-          </m.div>
-        )}
-      </AnimatePresence>
-
       {/* Top Header Module */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Question Paper Authorizations</h1>
-          <p className="text-slate-500 text-sm mt-0.5">Review validation criteria, verify layouts, and manage system assignments.</p>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Question Paper Orders Library</h1>
+          <p className="text-slate-500 text-sm mt-0.5">Review validation criteria, verify letter layouts, and track system assignments.</p>
         </div>
-
-        {selectedOrders.length > 0 && (
-          <m.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1.5 rounded-xl self-start sm:self-auto"
-          >
-            <span className="text-xs font-bold px-2 text-slate-500 font-mono">{selectedOrders.length} Chosen</span>
-            <button
-              onClick={() => handleBulkAction('Approved')}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-lg transition-all flex items-center gap-1 shadow-xs"
-            >
-              <Check size={13} /> Approve
-            </button>
-            <button
-              onClick={() => handleBulkAction('Rejected')}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-3 py-2 rounded-lg transition-all flex items-center gap-1 shadow-xs"
-            >
-              <X size={13} /> Reject
-            </button>
-          </m.div>
-        )}
       </div>
 
       {/* Records Data Table */}
@@ -337,27 +179,15 @@ const ApproveQPOrders = () => {
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200/60">
-                  <th className="w-12 px-6 py-4">
-                    <input
-                      type="checkbox"
-                      className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer"
-                      onChange={handleSelectAll}
-                      checked={selectedOrders.length === orders.length && orders.length > 0}
-                    />
-                  </th>
                   <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Subject Details</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Assigned Faculty</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Exam Type</th>
-                  <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">Authorization State</th>
                   <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-slate-500 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {orders.map((order) => {
                   const courseData = order.courseCode || {};
-                  const isApproved = order.status === 'Approved';
-                  const isRejected = order.status === 'Rejected';
-                  const isChecked = selectedOrders.includes(order._id);
                   const backupAssignment = assignedQPSetters.find(a => a.subject === (courseData.courseName || order.courseName));
 
                   return (
@@ -365,17 +195,8 @@ const ApproveQPOrders = () => {
                       key={order._id} 
                       initial={{ opacity: 0, y: 4 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`transition-colors duration-150 ${isChecked ? 'bg-indigo-50/30' : 'hover:bg-slate-50/50'}`}
+                      className="transition-colors duration-150 hover:bg-slate-50/50"
                     >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <input
-                          type="checkbox"
-                          className="rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 w-4 h-4 cursor-pointer"
-                          checked={isChecked}
-                          onChange={() => handleSelectOrder(order._id)}
-                        />
-                      </td>
-
                       <td className="px-6 py-4">
                         <div className="flex items-start space-x-3">
                           <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-mono text-xs font-bold mt-0.5 flex-shrink-0">
@@ -413,27 +234,8 @@ const ApproveQPOrders = () => {
                         </span>
                       </td>
 
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {isApproved ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">
-                            <CheckCircle2 size={12} />
-                            <span>Approved</span>
-                          </span>
-                        ) : isRejected ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-100">
-                            <XCircle size={12} />
-                            <span>Rejected</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100 animate-pulse">
-                            <Clock size={12} />
-                            <span>{order.status || 'Pending'}</span>
-                          </span>
-                        )}
-                      </td>
-
                       <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                        <div className="flex items-center justify-center gap-1.5">
+                        <div className="flex items-center justify-center">
                           <button
                             onClick={() => handleOpenViewer(order)}
                             title="Open Real-time PDF Workspace"
@@ -441,25 +243,6 @@ const ApproveQPOrders = () => {
                           >
                             <Eye size={13} /> <span>View PDF</span>
                           </button>
-
-                          {!isApproved && !isRejected ? (
-                            <>
-                              <button
-                                onClick={() => handleUpdateStatus(order._id, 'Approved')}
-                                className="p-1.5 rounded-lg border border-emerald-200 text-emerald-600 bg-emerald-50/50 hover:bg-emerald-600 hover:text-white transition-all active:scale-95"
-                              >
-                                <Check size={14} />
-                              </button>
-                              <button
-                                onClick={() => handleUpdateStatus(order._id, 'Rejected')}
-                                className="p-1.5 rounded-lg border border-rose-200 text-rose-600 bg-rose-50/50 hover:bg-rose-600 hover:text-white transition-all active:scale-95"
-                              >
-                                <X size={14} />
-                              </button>
-                            </>
-                          ) : (
-                            <span className="text-[11px] font-bold text-slate-400 px-1 select-none font-mono">Locked</span>
-                          )}
                         </div>
                       </td>
                     </m.tr>
@@ -501,7 +284,7 @@ const ApproveQPOrders = () => {
                   <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100">
                     <FileText size={16} />
                   </div>
-              
+                  <span className="text-sm font-bold text-slate-800">Appointment Document Viewport</span>
                 </div>
                 
                 <button
@@ -521,24 +304,6 @@ const ApproveQPOrders = () => {
                   type="application/pdf"
                 />
               </div>
-
-              {/* Action operations strip if order is currently pending verification */}
-              {activeOrder && activeOrder.status !== 'Approved' && activeOrder.status !== 'Rejected' && (
-                <div className="p-4 border-t border-slate-200 bg-white flex items-center justify-end gap-2 shadow-xs">
-                  <button
-                    onClick={() => { handleUpdateStatus(activeOrder._id, 'Rejected'); }}
-                    className="bg-white hover:bg-slate-50 text-rose-600 border border-slate-200 font-semibold text-xs px-4 py-2 rounded-xl transition shadow-2xs"
-                  >
-                    Deny Authorization
-                  </button>
-                  <button
-                    onClick={() => { handleUpdateStatus(activeOrder._id, 'Approved'); }}
-                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs px-4 py-2 rounded-xl transition shadow-md shadow-indigo-600/10"
-                  >
-                    Grant Clearance
-                  </button>
-                </div>
-              )}
 
             </m.div>
           </div>
